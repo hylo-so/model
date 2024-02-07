@@ -29,18 +29,18 @@ Moreover, the model incorporates a stability pool mechanism, where fSOL is burne
 To utilize the model effectively, follow these steps in main.py to customize your simulation:
 
 Update the following variables according to your requirements:
-* Initial SOL collateral,
-* Minimum Collateralization Ratio,
-* Percentage of fSOL in the stability pool,
-* Number of runs.
+* Initial SOL collateral `amount_SOL_initial`,
+* Minimum Collateralization Ratio `minimal_CR`,
+* Percentage of fSOL in the stability pool `fSOL_staked_per`,
+* Number of runs (setup for 1000 run) `for _ in range(1000):`.
 
-You can also change the burn/mint amount of xSOL/fSOL based on the collateralization ratio by adjusting the mean and standard deviation for different events in get_mint_amount().
+You can also change the burn/mint amount of xSOL/fSOL based on the collateralization ratio by adjusting the mean and standard deviation for different events in `get_mint_amount()`.
 
-Modify the likelihood of a burn/mint event for xSOL/fSOL according to the collateralization ratio by altering the percentages in get_action_probabilities().
+Modify the likelihood of a burn/mint event for xSOL/fSOL according to the collateralization ratio by altering the percentages in `get_action_probabilities()`.
 
-To experience varying randomness across each run, you may comment out line 4: np.random.seed(7).
+To experience varying randomness across each run, you may comment out line 4: `np.random.seed(7)`.
 
-Once your setup is complete, execute the script by running python3 main.py. The results from the last run will be stored in a CSV file (simulation_results.csv).
+Once your setup is complete, execute the script by running `python3 main.py`. The results from the last run will be stored in a CSV file `simulation_results.csv`.
 
-For visualizing the results of the csv file, use the command python3 chart.py to generate a chart.
+For visualizing the results of the csv file, use the command `python3 chart.py` to generate a chart.
 
