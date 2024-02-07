@@ -18,7 +18,7 @@ ax1.tick_params(axis='y', labelcolor=color)
 
 ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
 color = 'tab:green'
-ax2.set_ylabel('Collaterization ratio & nSOL', color=color)  # we already handled the x-label with ax1
+ax2.set_ylabel('Collaterization ratio & nSOL', color=color) 
 ax2.plot(data['day'], data['Collaterization ratio'], label='Collaterization ratio', color='g')
 ax2.tick_params(axis='y', labelcolor=color)
 
@@ -28,7 +28,7 @@ ax2.set_ylim(0, 15)
 ax1.legend(loc='upper left')
 ax2.legend(loc='upper right')
 
-fig.tight_layout()  # otherwise the right y-label is slightly clipped
+fig.tight_layout() 
 plt.title('Market Caps, Collaterization Ratio, and nSOL Evolution')
 
 # Save the figure
