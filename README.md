@@ -22,3 +22,25 @@ The model undergoes multiple iterations, with each run specifically designed to 
 This model primarily focuses on daily price returns, whereas, in practice, the protocol's stability would be monitored on a minute-by-minute basis. Consequently, the model may occasionally indicate under-collateralization situations that the protocol, in real-time operations, could effectively manage and mitigate.
 
 Moreover, the model incorporates a stability pool mechanism, where fSOL is burned to redeem SOL, but it does not account for the conversion from fSOL to xSOL. This conversion process represents an additional strategy for the protocol to ensure stability, highlighting a significant aspect not covered in the current modeling approach.
+
+
+## Usage of the Model
+
+To utilize the model effectively, follow these steps in main.py to customize your simulation:
+
+Update the following variables according to your requirements:
+* Initial SOL collateral,
+* Minimum Collateralization Ratio,
+* Percentage of fSOL in the stability pool,
+* Number of runs.
+
+You can also change the burn/mint amount of xSOL/fSOL based on the collateralization ratio by adjusting the mean and standard deviation for different events in get_mint_amount().
+
+Modify the likelihood of a burn/mint event for xSOL/fSOL according to the collateralization ratio by altering the percentages in get_action_probabilities().
+
+To experience varying randomness across each run, you may comment out line 4: np.random.seed(7).
+
+Once your setup is complete, execute the script by running python3 main.py. The results from the last run will be stored in a CSV file (simulation_results.csv).
+
+For visualizing the results of the csv file, use the command python3 chart.py to generate a chart.
+
