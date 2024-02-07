@@ -87,7 +87,7 @@ def calculate_collateral_ratio(nSOL, pSOL_current, nF, pF, nX, pX):
     
     return collateralization_ratio_fSOL
 
-def adjust_fSOL_to_target_CR(nX, pX, target_CR=1.3):
+def adjust_fSOL_to_target_CR(nX, pX, target_CR=1.1):
     global nF, nSOL, pF
     # Calculate nF_required to achieve the target collateral ratio
     nF_required = (nX * pX) / (pF * (target_CR - 1))
@@ -99,7 +99,7 @@ def adjust_fSOL_to_target_CR(nX, pX, target_CR=1.3):
 def use_stability_pool():
     global nF, nSOL, nX, pF, pX
     # Calculate if and how much fSOL needs to be adjusted to reach the target CR of 1.3
-    fSOL_adjustment = adjust_fSOL_to_target_CR(nX, pX, target_CR=1.3)
+    fSOL_adjustment = adjust_fSOL_to_target_CR(nX, pX, target_CR=1.1)
     
     # Ensure that fSOL adjustment is zero if it's positive, since we're only considering burning fSOL
     fSOL_adjustment = fSOL_adjustment if fSOL_adjustment <= 0 else 0

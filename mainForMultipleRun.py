@@ -1,13 +1,16 @@
 import pandas as pd
 import numpy as np
 
-
+np.random.seed(7)
 
 def run_simulation():
 
-    #INPUT
-    amount_SOL_initial = 30000
-    minimal_CR=1.3
+    #np.random.seed(7)
+
+    # input
+    amount_SOL_initial = 300 # Intial amount of SOL 
+    minimal_CR=1.3 # Minimal collaterized ratio before stability pool intervention
+    fSOL_staked_per = 0.4 # Percentage of the fSOL supply staked in the stability Pool
 
 
     # Initialization of Stability Pool and xSOL negative counter
@@ -51,7 +54,7 @@ def run_simulation():
     # Function to set initial conditions before the simulation starts
     initialize_simulation()
 
-    #Adjust reserve depending on Burn and Mint
+    # Adjust reserve depending on Burn and Mint
     def adjust_SOL_reserve(amount_in_dollars, pSOL_current):
         global nSOL  # Access the global SOL reserve variable
         SOL_change = amount_in_dollars / pSOL_current  # Calculate the SOL equivalent of the dollar amount
@@ -99,7 +102,7 @@ def run_simulation():
         return collateralization_ratio_fSOL
     
 
-    #Calculate fSOL needed to be burn/mint to reach target CR, negative value will result in a burn
+    # Calculate fSOL needed to be burn/mint to reach target CR, negative value will result in a burn
     def adjust_fSOL_to_target_CR(nX, pX, minimal_CR):
         global nF, nSOL, pF
         # Calculate nF_required to achieve the target collateral ratio
@@ -121,7 +124,7 @@ def run_simulation():
 
         if fSOL_adjustment < 0:
             # If adjustment is negative, it indicates the need to burn some fSOL to reduce nF
-            max_fSOL_to_burn = nF * 0.5  # Calculate 50% of the current fSOL supply
+            max_fSOL_to_burn = nF * fSOL_staked_per  # Calculate % of the current fSOL supply available to be redeem
             fSOL_to_burn = min(-fSOL_adjustment, max_fSOL_to_burn)  # Determine the actual amount to burn, without exceeding 50%
 
             nF -= fSOL_to_burn  # Correctly reduce nF by the burn amount to reflect the burning of fSOL
@@ -141,11 +144,11 @@ def run_simulation():
         elif 1.5 < collateral_ratio <= 2.2:
             return {'fSOL_mint': 0.60, 'xSOL_mint': 0.85}
         elif 1 < collateral_ratio <= 1.5:
-            return {'fSOL_mint': 0.00, 'xSOL_mint': 0.95}
+            return {'fSOL_mint': 0.00, 'xSOL_mint': 0.80} #fSOL mint disable, xSOL burn fees set at 8% and minting to 0%
         else:
-            # Define behavior for < 100% collateral ratio if needed
-            return {'fSOL_mint': 0.00, 'xSOL_mint': 1.00}
-        
+            return {'fSOL_mint': 0.00, 'xSOL_mint': 1.00} # This result in an undercollaterized protocol
+    
+    # Function to defined the amount to mint based on the current collateral_ratio
     def get_mint_amount(collateral_ratio):
         if collateral_ratio > 5:
             return {'fSOL_mint_amount': np.random.normal(0.05, 0.1), 
@@ -164,34 +167,34 @@ def run_simulation():
                     'xSOL_burn_amount': np.random.normal(0.02, 0.05)}
         elif 1.5 < collateral_ratio <= 2.2:
             return {'fSOL_mint_amount': np.random.normal(0.01, 0.03), 
-                    'xSOL_mint_amount': np.random.normal(0.04, 0.07), 
-                    'fSOL_burn_amount': np.random.normal(0.04, 0.07), 
+                    'xSOL_mint_amount': np.random.normal(0.03, 0.05), 
+                    'fSOL_burn_amount': np.random.normal(0.03, 0.05), 
                     'xSOL_burn_amount': np.random.normal(0.01, 0.03)}
         elif 1 < collateral_ratio <= 1.5:
             return {'fSOL_mint_amount': np.random.normal(0.00, 0.01), 
-                    'xSOL_mint_amount': np.random.normal(0.05, 0.1), 
+                    'xSOL_mint_amount': np.random.normal(0.02, 0.5), 
                     'fSOL_burn_amount': np.random.normal(0.05, 0.1), 
-                    'xSOL_burn_amount': np.random.normal(0.00, 0.01)}
+                    'xSOL_burn_amount': np.random.normal(0.00, 0.02)}
         else:
-            # Define behavior for < 100% collateral ratio if needed
             return {'fSOL_mint_amount': np.random.normal(0.00, 0.01), 
                     'xSOL_mint_amount': np.random.normal(0.05, 0.1), 
                     'fSOL_burn_amount': np.random.normal(0.05, 0.1), 
                     'xSOL_burn_amount': np.random.normal(0.00, 0.01)}
         
-     #####################LOOP#####################
-
-    for day in range(days):
-        pSOL_current = new_sol_price_data['Price'].iloc[day]  # Update current SOL price
+    #####################LOOP#####################
         
+    
+    # Simulation start
+    for day in range(days):
+
+        # Update current SOL price
+        pSOL_current = new_sol_price_data['Price'].iloc[day]  
 
         # Update pX for the current day before calculating the collateral ratio
         pX = recalculate_pX(pSOL_current)
-
         
         # Recalculate the collateral ratio after adjustment
         collateral_ratio = calculate_collateral_ratio(nSOL, pSOL_current, nF, pF)
-        
         
         # Get the action probabilities for the current collateral ratio
         probabilities = get_action_probabilities(collateral_ratio)
@@ -200,19 +203,20 @@ def run_simulation():
         action_fSOL = 'mint' if np.random.rand() < probabilities['fSOL_mint'] else 'burn'
         action_xSOL = 'mint' if np.random.rand() < probabilities['xSOL_mint'] else 'burn'
         
-        # Determine mint/burn amount
+        # Determine mint/burn amount percentage of the current supply
         amount_to_mint = get_mint_amount(collateral_ratio)
-        fSOL_to_mint = amount_to_mint['fSOL_mint_amount']
-        xSOL_to_mint = amount_to_mint['xSOL_mint_amount']
-        fSOL_to_burn = amount_to_mint['fSOL_burn_amount']
-        xSOL_to_burn = amount_to_mint['xSOL_burn_amount']
+        fSOL_to_mint_per = amount_to_mint['fSOL_mint_amount']
+        xSOL_to_mint_per = amount_to_mint['xSOL_mint_amount']
+        fSOL_to_burn_per = amount_to_mint['fSOL_burn_amount']
+        xSOL_to_burn_per = amount_to_mint['xSOL_burn_amount']
 
-        mint_amount_fSOL = int(nF*fSOL_to_mint) 
-        mint_amount_xSOL = int(nX*xSOL_to_mint) 
-        burn_amount_fSOL = int(nF*fSOL_to_burn)
-        burn_amount_xSOL = int(nX*xSOL_to_burn)
+        # Determine absolute number of mint/burn amount 
+        mint_amount_fSOL = int(nF*fSOL_to_mint_per) # We use int to ensure it's always a positive number that is return, since we use normal distribution it can return negative number
+        mint_amount_xSOL = int(nX*xSOL_to_mint_per) 
+        burn_amount_fSOL = int(nF*fSOL_to_burn_per)
+        burn_amount_xSOL = int(nX*xSOL_to_burn_per)
     
-        # Adjust the mint/burn amount based on the decided action
+        # Adjust the mint/burn amount based on the decided action, negative number result in a burn
         if action_fSOL == 'burn':
             mint_burn_amount_fSOL = -abs(burn_amount_fSOL)
         else:
@@ -227,11 +231,13 @@ def run_simulation():
         mint_fSOL(mint_burn_amount_fSOL, pSOL_current)
         mint_xSOL(mint_burn_amount_xSOL, pSOL_current)
 
+        # Check if stability pool intervention is need
         stability_pool = use_stability_pool(pX)
 
+        # Update counter if stability pool is used or if xSOL is negative
         if stability_pool < 0:
             stability_pool_non_zero_count += 1
-        if pX * nX < 0:  # Assuming pX is the variable for xSOL price
+        if pX * nX < 0: 
             xSOL_negative_price_count += 1
         
         # Gather the data for the current day
@@ -258,28 +264,29 @@ def run_simulation():
         # Append the day's data to the list
         daily_data.append(day_data)
 
+        if pX < 0:
+            break  # Exit the loop if pX is negative
+
     # After the loop, convert the list of dictionaries to a DataFrame
     results_df = pd.DataFrame(daily_data)
 
     # Write the DataFrame to a CSV file
-    results_csv_path = './simulation_results.csv'  # Update this path
+    results_csv_path = './simulation_results.csv' 
     results_df.to_csv(results_csv_path, index=False)
 
     return stability_pool_non_zero_count, xSOL_negative_price_count
-#print(f"Simulation results have been written to {results_csv_path}")
+
 
 
 
 
 all_runs_results = []
 
-for _ in range(1):
+# Run the simulation x time
+for _ in range(1000):
     run_result = run_simulation()
     all_runs_results.append(run_result)
 
-# Analyze the results
-# You can aggregate or directly analyze the all_runs_results list
-# For example, to print the average counts:
 stability_pool_non_zero = sum(result[0] for result in all_runs_results)
 xSOL_negative_price = sum(result[1] for result in all_runs_results)
 
