@@ -5,7 +5,6 @@ np.random.seed(7)
 
 def run_simulation():
 
-    #np.random.seed(7)
 
     # input
     amount_SOL_initial = 300 # Intial amount of SOL 
