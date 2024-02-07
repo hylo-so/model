@@ -6,8 +6,8 @@ This project aims to model the behavior of the Hylo protocol based on historical
 The model relies on the following key assumptions regarding the probability of net burn or mint of fSOL and xSOL after each trading day:
 
 * **Collateral Ratio Impact:**
-  * A higher collateral ratio increases the likelihood of fSOL being minted and xSOL being burned. This scenario suggests a market perception of increased security or over-collateralization, encouraging the minting of fSOL.
-  * Conversely, a lower collateral ratio heightens the probability of fSOL being burned and xSOL being minted. This reflects concerns over under-collateralization, prompting adjustments to restore balance.
+  * A higher collateral ratio increases the likelihood of fSOL being minted and xSOL being burned. This scenario suggests a market perception of increased security or over-collateralization, encouraging the minting of fSOL. Additionally, the low effective leverage of xSOL makes it less attractive to traders.
+  * Conversely, a lower collateral ratio increases the likelihood of fSOL being burned and xSOL being minted. This situation reflects concerns over under-collateralization, leading fSOL holders to burn fSOL in order to redeem its equivalent value in SOL. It also signifies a growing interest among traders in xSOL, due to the higher effective leverage offered.
 
 ## Methodology
 The model undergoes multiple iterations, with each run specifically designed to assess frequency of the stability pool usage and the frequency of negative xSOL price occurrences, which signals a failure in maintaining the collateralization of fSOL. Data collected after detecting a negative xSOL price are not considered in this model, as the protocol would require re-collateralization by the team to resume operations, a process not covered by this simulation.
