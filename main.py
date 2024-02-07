@@ -41,18 +41,6 @@ initialize_simulation()
 # Now, nF and nX are calculated based on the initial conditions and pSOL_initial
 print(f"Initial nF: {nF}, Initial nX: {nX}, Initial pSOL: {pSOL_initial}")
 
-
-# Function to calculate new pX given a change in pSOL
-def calculate_new_pX(pSOL_new):
-    total_value_initial = nSOL * pSOL_initial  # Initial total value of the reserve
-    total_value_new = nSOL * pSOL_new  # New total value of the reserve
-    
-    # Since pF is always 1, we only need to adjust pX to maintain the invariant
-    # nSOL * pSOL = nF * pF + nX * pX
-    # Solve for pX: pX = (total_value_new - nF * pF) / nX
-    pX_new = (total_value_new - nF * pF) / nX
-    return pX_new
-
 def adjust_SOL_reserve(amount_in_dollars, pSOL_current):
     global nSOL  # Access the global SOL reserve variable
     SOL_change = amount_in_dollars / pSOL_current  # Calculate the SOL equivalent of the dollar amount
@@ -77,18 +65,6 @@ def recalculate_pX_after_mint_burn(pSOL_current):
     return pX_new_after_mint_burn
 
 
-# Function to calculate market caps and collateralization ratio
-def calculate_market_caps_and_collateral_ratio(pSOL_current):
-    # Calculate market cap of fSOL and xSOL
-    market_cap_fSOL = nF * pF
-    market_cap_xSOL = nX * pX  # Note: pX should be updated to the latest calculated value
-    
-    # Calculate collateralization ratio for fSOL
-    total_SOL_reserve_in_dollars = nSOL * pSOL_current
-    collateralization_ratio_fSOL = total_SOL_reserve_in_dollars / market_cap_fSOL
-    
-    return market_cap_fSOL, market_cap_xSOL, collateralization_ratio_fSOL
-
 #####################LOOP#####################
 
 daily_data = []
@@ -105,15 +81,13 @@ def calculate_collateral_ratio(nSOL, pSOL_current, nF, pF, nX, pX):
     
     # Calculate the market cap of fSOL and xSOL
     market_cap_fSOL = nF * pF
-
-    market_cap_xSOL = nX * pX
     
     # Calculate the collateralization ratio for fSOL
     collateralization_ratio_fSOL = total_SOL_value / market_cap_fSOL  # Multiply by 100 to express as a percentage
     
     return collateralization_ratio_fSOL
 
-def adjust_fSOL_to_target_CR(pSOL_current, nX, pX, target_CR=1.3):
+def adjust_fSOL_to_target_CR(nX, pX, target_CR=1.3):
     global nF, nSOL, pF
     # Calculate nF_required to achieve the target collateral ratio
     nF_required = (nX * pX) / (pF * (target_CR - 1))
@@ -122,10 +96,10 @@ def adjust_fSOL_to_target_CR(pSOL_current, nX, pX, target_CR=1.3):
 
     return fSOL_adjustment
 
-def use_stability_pool(pSOL_current):
+def use_stability_pool():
     global nF, nSOL, nX, pF, pX
     # Calculate if and how much fSOL needs to be adjusted to reach the target CR of 1.3
-    fSOL_adjustment = adjust_fSOL_to_target_CR(pSOL_current, nX, pX, target_CR=1.3)
+    fSOL_adjustment = adjust_fSOL_to_target_CR(nX, pX, target_CR=1.3)
     
     # Ensure that fSOL adjustment is zero if it's positive, since we're only considering burning fSOL
     fSOL_adjustment = fSOL_adjustment if fSOL_adjustment <= 0 else 0
@@ -236,7 +210,7 @@ for day in range(days):
     mint_fSOL(mint_burn_amount_fSOL, pSOL_current)
     mint_xSOL(mint_burn_amount_xSOL, pSOL_current)
 
-    stability_pool = use_stability_pool(pSOL_current)
+    stability_pool = use_stability_pool()
     
     # Gather the data for the current day
     day_data = {

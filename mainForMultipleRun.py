@@ -1,20 +1,23 @@
 import pandas as pd
 import numpy as np
 
+
+
 def run_simulation():
 
     #INPUT
-    amount_SOL_initial = 300
+    amount_SOL_initial = 30000
+    minimal_CR=1.3
 
 
-
+    # Initialization of Stability Pool and xSOL negative counter
     stability_pool_non_zero_count = 0
     xSOL_negative_price_count = 0
 
+    #####################CSVSETUP#####################
+
     file_path = './Solana Historical Data.csv' 
     new_sol_price_data = pd.read_csv(file_path)
-
-    #np.random.seed(42)
 
     # Convert 'Date' to a datetime object
     new_sol_price_data['Date'] = pd.to_datetime(new_sol_price_data['Date'])
@@ -28,7 +31,7 @@ def run_simulation():
     # Limit the DataFrame to the first 10 rows
     new_sol_price_data = new_sol_price_data.head(1000)
 
-    #####################CALCULATION#####################
+    #####################FUNCTION#####################
 
 
     # Initialize the first SOL price from the CSV data
@@ -45,24 +48,10 @@ def run_simulation():
         nF = (pSOL_initial * nSOL) / 2
         nX = nF
 
-    # Call this function to set initial conditions before the simulation starts
+    # Function to set initial conditions before the simulation starts
     initialize_simulation()
 
-    # Now, nF and nX are calculated based on the initial conditions and pSOL_initial
-    #print(f"Initial nF: {nF}, Initial nX: {nX}, Initial pSOL: {pSOL_initial}")
-
-
-    # Function to calculate new pX given a change in pSOL
-    def calculate_new_pX(pSOL_new):
-        total_value_initial = nSOL * pSOL_initial  # Initial total value of the reserve
-        total_value_new = nSOL * pSOL_new  # New total value of the reserve
-        
-        # Since pF is always 1, we only need to adjust pX to maintain the invariant
-        # nSOL * pSOL = nF * pF + nX * pX
-        # Solve for pX: pX = (total_value_new - nF * pF) / nX
-        pX_new = (total_value_new - nF * pF) / nX
-        return pX_new
-
+    #Adjust reserve depending on Burn and Mint
     def adjust_SOL_reserve(amount_in_dollars, pSOL_current):
         global nSOL  # Access the global SOL reserve variable
         SOL_change = amount_in_dollars / pSOL_current  # Calculate the SOL equivalent of the dollar amount
@@ -71,37 +60,24 @@ def run_simulation():
     def mint_fSOL(amount, pSOL_current):
         global nF
         nF += amount  # Increase or decrease fSOL supply
-        amount_in_dollars = amount * pF  # Calculate the dollar value of the amount
-        adjust_SOL_reserve(amount_in_dollars, pSOL_current)  # Adjust the SOL reserve
+        amount_in_dollars = amount * pF 
+        adjust_SOL_reserve(amount_in_dollars, pSOL_current) 
 
     def mint_xSOL(amount, pSOL_current):
         global nX
         nX += amount  # Increase or decrease xSOL supply
-        amount_in_dollars = amount * pX  # Calculate the dollar value based on the current pX
-        adjust_SOL_reserve(amount_in_dollars, pSOL_current)  # Adjust the SOL reserve
+        amount_in_dollars = amount * pX  
+        adjust_SOL_reserve(amount_in_dollars, pSOL_current)
 
     # Function to recalculate pX after minting/burning, given the current SOL price
-    def recalculate_pX_after_mint_burn(pSOL_current):
+    def recalculate_pX(pSOL_current):
         total_value_current = nSOL * pSOL_current
-        pX_new_after_mint_burn = (total_value_current - (nF * pF)) / nX
-        return pX_new_after_mint_burn
+        pX_new = (total_value_current - (nF * pF)) / nX
+        return pX_new
 
 
-    # Function to calculate market caps and collateralization ratio
-    def calculate_market_caps_and_collateral_ratio(pSOL_current):
-        # Calculate market cap of fSOL and xSOL
-        market_cap_fSOL = nF * pF
-        market_cap_xSOL = nX * pX  # Note: pX should be updated to the latest calculated value
-        
-        # Calculate collateralization ratio for fSOL
-        total_SOL_reserve_in_dollars = nSOL * pSOL_current
-        collateralization_ratio_fSOL = total_SOL_reserve_in_dollars / market_cap_fSOL
-        
-        return market_cap_fSOL, market_cap_xSOL, collateralization_ratio_fSOL
 
-    #####################LOOP#####################
-
-    daily_data = []
+    daily_data = [] #initializing an empty list for daily data
 
     # Set the initial SOL price for simulation purposes
     pSOL_current = new_sol_price_data['Price'].iloc[0]  # Initial SOL price from the new data
@@ -109,33 +85,36 @@ def run_simulation():
     # Simulation parameters
     days = len(new_sol_price_data)  # Adjust the simulation length to match the SOL price data length
 
-    def calculate_collateral_ratio(nSOL, pSOL_current, nF, pF, nX, pX):
+    def calculate_collateral_ratio(nSOL, pSOL_current, nF, pF):
         # Calculate the total value of the SOL reserve
         total_SOL_value = nSOL * pSOL_current
         
         # Calculate the market cap of fSOL and xSOL
         market_cap_fSOL = nF * pF
 
-        market_cap_xSOL = nX * pX
         
         # Calculate the collateralization ratio for fSOL
-        collateralization_ratio_fSOL = total_SOL_value / market_cap_fSOL  # Multiply by 100 to express as a percentage
+        collateralization_ratio_fSOL = total_SOL_value / market_cap_fSOL 
         
         return collateralization_ratio_fSOL
+    
 
-    def adjust_fSOL_to_target_CR(pSOL_current, nX, pX, target_CR=1.5):
+    #Calculate fSOL needed to be burn/mint to reach target CR, negative value will result in a burn
+    def adjust_fSOL_to_target_CR(nX, pX, minimal_CR):
         global nF, nSOL, pF
         # Calculate nF_required to achieve the target collateral ratio
-        nF_required = (nX * pX) / (pF * (target_CR - 1))
+        nF_required = (nX * pX) / (pF * (minimal_CR - 1))
         # Calculate the adjustment needed
         fSOL_adjustment = nF_required - nF
 
+
         return fSOL_adjustment
 
-    def use_stability_pool(pSOL_current):
-        global nF, nSOL, nX, pF, pX
+    def use_stability_pool(pX):
+        global nF, nSOL, nX, pF
+        
         # Calculate if and how much fSOL needs to be adjusted to reach the target CR of 1.3
-        fSOL_adjustment = adjust_fSOL_to_target_CR(pSOL_current, nX, pX, target_CR=1.3)
+        fSOL_adjustment = adjust_fSOL_to_target_CR(nX, pX, minimal_CR)
         
         # Ensure that fSOL adjustment is zero if it's positive, since we're only considering burning fSOL
         fSOL_adjustment = fSOL_adjustment if fSOL_adjustment <= 0 else 0
@@ -199,17 +178,19 @@ def run_simulation():
                     'xSOL_mint_amount': np.random.normal(0.05, 0.1), 
                     'fSOL_burn_amount': np.random.normal(0.05, 0.1), 
                     'xSOL_burn_amount': np.random.normal(0.00, 0.01)}
+        
+     #####################LOOP#####################
 
-    # Within your daily simulation loop
     for day in range(days):
         pSOL_current = new_sol_price_data['Price'].iloc[day]  # Update current SOL price
         
 
         # Update pX for the current day before calculating the collateral ratio
-        pX = recalculate_pX_after_mint_burn(pSOL_current)
+        pX = recalculate_pX(pSOL_current)
+
         
         # Recalculate the collateral ratio after adjustment
-        collateral_ratio = calculate_collateral_ratio(nSOL, pSOL_current, nF, pF, nX, pX)
+        collateral_ratio = calculate_collateral_ratio(nSOL, pSOL_current, nF, pF)
         
         
         # Get the action probabilities for the current collateral ratio
@@ -246,11 +227,11 @@ def run_simulation():
         mint_fSOL(mint_burn_amount_fSOL, pSOL_current)
         mint_xSOL(mint_burn_amount_xSOL, pSOL_current)
 
-        stability_pool = use_stability_pool(pSOL_current)
+        stability_pool = use_stability_pool(pX)
 
-        if stability_pool != 0:
+        if stability_pool < 0:
             stability_pool_non_zero_count += 1
-        if pX < 0:  # Assuming pX is the variable for xSOL price
+        if pX * nX < 0:  # Assuming pX is the variable for xSOL price
             xSOL_negative_price_count += 1
         
         # Gather the data for the current day
@@ -271,7 +252,7 @@ def run_simulation():
             "Marketcap fSOL": pF * nF,
             "Total mcap": (pX * nX) + (pF * nF),
             "fSOL adjustment":  stability_pool,
-            "Collaterization ratio": calculate_collateral_ratio(nSOL, pSOL_current, nF, pF, nX, pX)
+            "Collaterization ratio": collateral_ratio
         }
 
         # Append the day's data to the list
@@ -285,8 +266,7 @@ def run_simulation():
     results_df.to_csv(results_csv_path, index=False)
 
     return stability_pool_non_zero_count, xSOL_negative_price_count
-
-    #print(f"Simulation results have been written to {results_csv_path}")
+#print(f"Simulation results have been written to {results_csv_path}")
 
 
 
