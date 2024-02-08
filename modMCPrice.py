@@ -1,14 +1,22 @@
 import pandas as pd
 import numpy as np
+from monteCarlo import generate_monte_carlo_price_paths
 
-np.random.seed(7)
+#np.random.seed(7)
 
-def run_simulation():
+# Specify the path to your historical data CSV
+file_path = './Solana Historical Data.csv'
 
+# Generate the Monte Carlo price paths
+price_paths = generate_monte_carlo_price_paths(file_path, T=1000, N=30)
 
+def run_simulation(simulated_prices):
+
+    
     # input
     amount_SOL_initial = 300 # Intial amount of SOL 
-    minimal_CR=1.3 # Minimal collaterized ratio before stability pool intervention
+    stab_mod1 = 1.5 # Stability mode 1 collaterization ratio threshold, usage of stability pool
+    stab_mod2 = 1.6 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
     fSOL_staked_per = 0.4 # Percentage of the fSOL supply staked in the stability Pool
 
 
@@ -16,28 +24,12 @@ def run_simulation():
     stability_pool_non_zero_count = 0
     xSOL_negative_price_count = 0
 
-    #####################CSVSETUP#####################
-
-    file_path = './Solana Historical Data.csv' 
-    new_sol_price_data = pd.read_csv(file_path)
-
-    # Convert 'Date' to a datetime object
-    new_sol_price_data['Date'] = pd.to_datetime(new_sol_price_data['Date'])
-
-    # Sort the data by 'Date'
-    new_sol_price_data.sort_values('Date', inplace=True)
-
-    # Reset the index of the DataFrame after sorting
-    new_sol_price_data.reset_index(drop=True, inplace=True)
-
-    # Limit the DataFrame to the first 10 rows
-    new_sol_price_data = new_sol_price_data.head(1000)
 
     #####################FUNCTION#####################
 
 
     # Initialize the first SOL price from the CSV data
-    pSOL_initial = new_sol_price_data['Price'].iloc[0]
+    pSOL_initial = simulated_prices[0]
 
     # Initial conditions setup function
     def initialize_simulation():
@@ -82,10 +74,10 @@ def run_simulation():
     daily_data = [] #initializing an empty list for daily data
 
     # Set the initial SOL price for simulation purposes
-    pSOL_current = new_sol_price_data['Price'].iloc[0]  # Initial SOL price from the new data
+    pSOL_current = simulated_prices[0]  # Initial SOL price with first simulated price
 
     # Simulation parameters
-    days = len(new_sol_price_data)  # Adjust the simulation length to match the SOL price data length
+    days = len(simulated_prices)  # Adjust the simulation length to match the SOL price data length
 
     def calculate_collateral_ratio(nSOL, pSOL_current, nF, pF):
         # Calculate the total value of the SOL reserve
@@ -102,10 +94,10 @@ def run_simulation():
     
 
     # Calculate fSOL needed to be burn/mint to reach target CR, negative value will result in a burn
-    def adjust_fSOL_to_target_CR(nX, pX, minimal_CR):
+    def adjust_fSOL_to_target_CR(nX, pX, stab_mod1):
         global nF, nSOL, pF
         # Calculate nF_required to achieve the target collateral ratio
-        nF_required = (nX * pX) / (pF * (minimal_CR - 1))
+        nF_required = (nX * pX) / (pF * (stab_mod1 - 1))
         # Calculate the adjustment needed
         fSOL_adjustment = nF_required - nF
 
@@ -116,7 +108,7 @@ def run_simulation():
         global nF, nSOL, nX, pF
         
         # Calculate if and how much fSOL needs to be adjusted to reach the target CR of 1.3
-        fSOL_adjustment = adjust_fSOL_to_target_CR(nX, pX, minimal_CR)
+        fSOL_adjustment = adjust_fSOL_to_target_CR(nX, pX, stab_mod1)
         
         # Ensure that fSOL adjustment is zero if it's positive, since we're only considering burning fSOL
         fSOL_adjustment = fSOL_adjustment if fSOL_adjustment <= 0 else 0
@@ -140,9 +132,9 @@ def run_simulation():
             return {'fSOL_mint': 0.90, 'xSOL_mint': 0.65}
         elif 2.2 < collateral_ratio <= 3:
             return {'fSOL_mint': 0.8, 'xSOL_mint': 0.70}
-        elif 1.5 < collateral_ratio <= 2.2:
+        elif stab_mod2 < collateral_ratio <= 2.2:
             return {'fSOL_mint': 0.60, 'xSOL_mint': 0.85}
-        elif 1 < collateral_ratio <= 1.5:
+        elif 1 < collateral_ratio <= stab_mod2:
             return {'fSOL_mint': 0.00, 'xSOL_mint': 0.80} #fSOL mint disable, xSOL burn fees set at 8% and minting to 0%
         else:
             return {'fSOL_mint': 0.00, 'xSOL_mint': 1.00} # This result in an undercollaterized protocol
@@ -187,7 +179,7 @@ def run_simulation():
     for day in range(days):
 
         # Update current SOL price
-        pSOL_current = new_sol_price_data['Price'].iloc[day]  
+        pSOL_current = simulated_prices[day] 
 
         # Update pX for the current day before calculating the collateral ratio
         pX = recalculate_pX(pSOL_current)
@@ -276,21 +268,36 @@ def run_simulation():
     return stability_pool_non_zero_count, xSOL_negative_price_count
 
 
-
-
-
 all_runs_results = []
+num_runs_per_path = 10  # Define how many times to run the simulation per price path
 
-# Run the simulation x time
-for _ in range(1000):
-    run_result = run_simulation()
-    all_runs_results.append(run_result)
+# Assuming 'price_paths' is a 2D array where each column is a different simulation run
+for path_index, path in enumerate(price_paths.T):  # Transpose to iterate over each simulation run as a separate array
+    path_results = []  # Store results for each run of this path
+    
+    for run in range(num_runs_per_path):
+        run_result = run_simulation(path)  # Run the simulation with the current path
+        path_results.append(run_result)  # Collect results for this run
+    
+    all_runs_results.append(path_results)  # Store all runs for this path
 
-stability_pool_non_zero = sum(result[0] for result in all_runs_results)
-xSOL_negative_price = sum(result[1] for result in all_runs_results)
+    #print(f"Completed simulations for path {path_index + 1}/{price_paths.shape[1]}")
 
-print(f"Average times stability_pool returned non-zero: {stability_pool_non_zero}")
-print(f"Average times xSOL price was negative: {xSOL_negative_price}")
+# Initialize counters for aggregation
+total_stability_pool_non_zero = 0
+total_xSOL_negative_price = 0
+total_runs = 0
 
+# Iterate over each set of results for the paths
+for path_results in all_runs_results:
+    for result in path_results:
+        total_stability_pool_non_zero += result[0]
+        total_xSOL_negative_price += result[1]
+    total_runs += len(path_results)
 
+# Calculate averages
+average_stability_pool_non_zero = total_stability_pool_non_zero / total_runs
+average_xSOL_negative_price = total_xSOL_negative_price / total_runs
 
+print(f"Average times stability pool returned non-zero: {average_stability_pool_non_zero}")
+print(f"Average times xSOL price was negative: {average_xSOL_negative_price}")
