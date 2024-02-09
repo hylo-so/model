@@ -1,22 +1,28 @@
 import pandas as pd
 import numpy as np
 from monteCarlo import generate_monte_carlo_price_paths
+from chartMC import generate_charte_MC
 
 #np.random.seed(7)
 
 # Specify the path to your historical data CSV
 file_path = './Solana Historical Data.csv'
 
-# Generate the Monte Carlo price paths
-price_paths = generate_monte_carlo_price_paths(file_path, T=1000, N=30)
+# Generate the Monte Carlo price paths T = to amount of daily return generate, N number of paths generate
+T = 1000
+N = 200
+beta = 1.0 #Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
+price_paths = generate_monte_carlo_price_paths(file_path,beta, T, N)
+#generate_charte_MC (file_path, beta, T, N)
+num_runs_per_path = 2  # Define how many times to run the simulation per price path
 
 def run_simulation(simulated_prices):
 
     
     # input
     amount_SOL_initial = 300 # Intial amount of SOL 
-    stab_mod1 = 1.5 # Stability mode 1 collaterization ratio threshold, usage of stability pool
-    stab_mod2 = 1.6 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
+    stab_mod1 = 1.05 # Stability mode 1 collaterization ratio threshold, usage of stability pool
+    stab_mod2 = 1.05 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
     fSOL_staked_per = 0.4 # Percentage of the fSOL supply staked in the stability Pool
 
 
@@ -202,7 +208,7 @@ def run_simulation(simulated_prices):
         xSOL_to_burn_per = amount_to_mint['xSOL_burn_amount']
 
         # Determine absolute number of mint/burn amount 
-        mint_amount_fSOL = int(nF*fSOL_to_mint_per) # We use int to ensure it's always a positive number that is return, since we use normal distribution it can return negative number
+        mint_amount_fSOL = int(nX*pX*fSOL_to_mint_per) # we base the minting amount of fSOL on current marketcap of xSOL so ensure the minting amount of fSOL get increase drasticly in case of SOL pump
         mint_amount_xSOL = int(nX*xSOL_to_mint_per) 
         burn_amount_fSOL = int(nF*fSOL_to_burn_per)
         burn_amount_xSOL = int(nX*xSOL_to_burn_per)
@@ -265,11 +271,11 @@ def run_simulation(simulated_prices):
     results_csv_path = './simulation_results.csv' 
     results_df.to_csv(results_csv_path, index=False)
 
-    return stability_pool_non_zero_count, xSOL_negative_price_count
+    return stability_pool_non_zero_count, xSOL_negative_price_count, collateral_ratio
 
 
 all_runs_results = []
-num_runs_per_path = 10  # Define how many times to run the simulation per price path
+
 
 # Assuming 'price_paths' is a 2D array where each column is a different simulation run
 for path_index, path in enumerate(price_paths.T):  # Transpose to iterate over each simulation run as a separate array
@@ -293,11 +299,12 @@ for path_results in all_runs_results:
     for result in path_results:
         total_stability_pool_non_zero += result[0]
         total_xSOL_negative_price += result[1]
+        avg_collateral_ratio = result[2]/ num_runs_per_path
     total_runs += len(path_results)
 
 # Calculate averages
-average_stability_pool_non_zero = total_stability_pool_non_zero / total_runs
-average_xSOL_negative_price = total_xSOL_negative_price / total_runs
+average_stability_pool_non_zero = total_stability_pool_non_zero / total_runs / T *100
+average_xSOL_negative_price = total_xSOL_negative_price / total_runs / T * 100
 
-print(f"Average times stability pool returned non-zero: {average_stability_pool_non_zero}")
-print(f"Average times xSOL price was negative: {average_xSOL_negative_price}")
+print(f"Average times stability pool returned non-zero: {average_stability_pool_non_zero}%")
+print(f"Average times xSOL price was negative: {average_xSOL_negative_price}%")

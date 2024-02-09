@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def generate_monte_carlo_price_paths(file_path, T=10000, N=1):
+def generate_monte_carlo_price_paths(file_path, beta=1, T=10000, N=1):
     # Read the historical data
     historical_data = pd.read_csv(file_path)
     historical_data['Price'] = historical_data['Price'].replace(',', '', regex=True).astype(float)
@@ -15,8 +15,10 @@ def generate_monte_carlo_price_paths(file_path, T=10000, N=1):
     mean_return = historical_data_cleaned['Daily Return'].mean()
     std_return = historical_data_cleaned['Daily Return'].std()
 
+    mean_return_beta_adjusted = mean_return * beta
+
     # Generate future returns for each simulation
-    future_returns = np.random.normal(mean_return, std_return, (T, N))
+    future_returns = np.random.normal(mean_return_beta_adjusted, std_return, (T, N))
 
     # Initialize and calculate the price paths
     price_paths = np.zeros_like(future_returns)

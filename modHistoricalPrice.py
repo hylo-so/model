@@ -8,8 +8,8 @@ def run_simulation():
 
     # input
     amount_SOL_initial = 300 # Intial amount of SOL 
-    stab_mod1 = 1.5 # Stability mode 1 collaterization ratio threshold, usage of stability pool
-    stab_mod2 = 1.6 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
+    stab_mod1 = 1.1 # Stability mode 1 collaterization ratio threshold, usage of stability pool
+    stab_mod2 = 1.1 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
     fSOL_staked_per = 0.4 # Percentage of the fSOL supply staked in the stability Pool
 
 
@@ -109,6 +109,11 @@ def run_simulation():
         nF_required = (nX * pX) / (pF * (stab_mod1 - 1))
         # Calculate the adjustment needed
         fSOL_adjustment = nF_required - nF
+
+        if fSOL_adjustment < 0:
+            print(fSOL_adjustment)
+            print("nX", nX,"pX", pX, "pF", pF, "CR", stab_mod1, "nF", nF)
+            print(nF_required)
 
 
         return fSOL_adjustment
@@ -211,7 +216,7 @@ def run_simulation():
         xSOL_to_burn_per = amount_to_mint['xSOL_burn_amount']
 
         # Determine absolute number of mint/burn amount 
-        mint_amount_fSOL = int(nF*fSOL_to_mint_per) # We use int to ensure it's always a positive number that is return, since we use normal distribution it can return negative number
+        mint_amount_fSOL = int(nX*pX*fSOL_to_mint_per) # We use int to ensure it's always a positive number that is return, since we use normal distribution it can return negative number
         mint_amount_xSOL = int(nX*xSOL_to_mint_per) 
         burn_amount_fSOL = int(nF*fSOL_to_burn_per)
         burn_amount_xSOL = int(nX*xSOL_to_burn_per)
@@ -283,10 +288,10 @@ def run_simulation():
 all_runs_results = []
 
 # Run the simulation x time
-for _ in range(100):
+for _ in range(1):
     run_result = run_simulation()
     all_runs_results.append(run_result)
-    
+
 # Calculate and print the average results across all runs
 stability_pool_non_zero = sum(result[0] for result in all_runs_results) / len(all_runs_results)
 xSOL_negative_price = sum(result[1] for result in all_runs_results) / len(all_runs_results)
