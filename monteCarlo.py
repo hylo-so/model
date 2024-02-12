@@ -13,12 +13,11 @@ def generate_monte_carlo_price_paths(file_path, beta=1, T=10000, N=1):
 
     # Statistical properties of historical daily returns
     mean_return = historical_data_cleaned['Daily Return'].mean()
-    std_return = historical_data_cleaned['Daily Return'].std()
+    std_return = historical_data_cleaned['Daily Return'].std() * beta
 
-    mean_return_beta_adjusted = mean_return * beta
 
     # Generate future returns for each simulation
-    future_returns = np.random.normal(mean_return_beta_adjusted, std_return, (T, N))
+    future_returns = np.random.normal(mean_return, std_return, (T, N))
 
     # Initialize and calculate the price paths
     price_paths = np.zeros_like(future_returns)

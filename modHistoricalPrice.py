@@ -8,8 +8,8 @@ def run_simulation():
 
     # input
     amount_SOL_initial = 300 # Intial amount of SOL 
-    stab_mod1 = 1.7 # Stability mode 1 collaterization ratio threshold, usage of stability pool
-    stab_mod2 = 1.9 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
+    stab_mod1 = 1.3 # Stability mode 1 collaterization ratio threshold, usage of stability pool
+    stab_mod2 = 1.5 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
     fSOL_staked_per = 0.4 # Percentage of the fSOL supply staked in the stability Pool
 
 
@@ -291,11 +291,11 @@ for _ in range(100):
     all_runs_results.append(run_result)
 
 # Calculate and print the average results across all runs
-stability_pool_non_zero = sum(result[0] for result in all_runs_results) / len(all_runs_results)
-xSOL_negative_price = sum(result[1] for result in all_runs_results) / len(all_runs_results)
+stability_pool_non_zero = sum(result[0] for result in all_runs_results) / len(all_runs_results) /10
+xSOL_negative_price = sum(result[1] for result in all_runs_results) / len(all_runs_results) /10
 
-print(f"Average times stability_pool returned non-zero: {stability_pool_non_zero}")
-print(f"Average times xSOL price was negative: {xSOL_negative_price}")
+print(f"Average times stability_pool returned non-zero: {stability_pool_non_zero}%")
+print(f"Average times xSOL price was negative: {xSOL_negative_price}%")
 
 
 

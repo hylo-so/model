@@ -10,19 +10,19 @@ file_path = './Solana Historical Data.csv'
 
 # Generate the Monte Carlo price paths T = to amount of daily return generate, N number of paths generate
 T = 1000
-N = 200
-beta = 1.0 #Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
+N = 100
+beta = 1 #Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
 price_paths = generate_monte_carlo_price_paths(file_path,beta, T, N)
 #generate_charte_MC (file_path, beta, T, N)
-num_runs_per_path = 2  # Define how many times to run the simulation per price path
+num_runs_per_path = 5  # Define how many times to run the simulation per price path
 
 def run_simulation(simulated_prices):
 
     
     # input
     amount_SOL_initial = 300 # Intial amount of SOL 
-    stab_mod1 = 1.05 # Stability mode 1 collaterization ratio threshold, usage of stability pool
-    stab_mod2 = 1.05 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
+    stab_mod1 = 1.3 # Stability mode 1 collaterization ratio threshold, usage of stability pool
+    stab_mod2 = 1.5 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
     fSOL_staked_per = 0.4 # Percentage of the fSOL supply staked in the stability Pool
 
 
@@ -34,7 +34,7 @@ def run_simulation(simulated_prices):
     #####################FUNCTION#####################
 
 
-    # Initialize the first SOL price from the CSV data
+    # Initialize the first SOL price from the MC simulated price
     pSOL_initial = simulated_prices[0]
 
     # Initial conditions setup function
@@ -100,8 +100,8 @@ def run_simulation(simulated_prices):
     
 
     # Calculate fSOL needed to be burn/mint to reach target CR, negative value will result in a burn
-    def adjust_fSOL_to_target_CR(nX, pX, stab_mod1):
-        global nF, nSOL, pF
+    def adjust_fSOL_to_target_CR(nF, nX, pX, stab_mod1):
+        global nSOL, pF
         # Calculate nF_required to achieve the target collateral ratio
         nF_required = (nX * pX) / (pF * (stab_mod1 - 1))
         # Calculate the adjustment needed
@@ -110,11 +110,11 @@ def run_simulation(simulated_prices):
 
         return fSOL_adjustment
 
-    def use_stability_pool(pX):
-        global nF, nSOL, nX, pF
+    def use_stability_pool(pX, nF):
+        global nSOL, nX, pF
         
         # Calculate if and how much fSOL needs to be adjusted to reach the target CR of 1.3
-        fSOL_adjustment = adjust_fSOL_to_target_CR(nX, pX, stab_mod1)
+        fSOL_adjustment = adjust_fSOL_to_target_CR(nF, nX, pX, stab_mod1)
         
         # Ensure that fSOL adjustment is zero if it's positive, since we're only considering burning fSOL
         fSOL_adjustment = fSOL_adjustment if fSOL_adjustment <= 0 else 0
@@ -122,10 +122,9 @@ def run_simulation(simulated_prices):
         if fSOL_adjustment < 0:
             # If adjustment is negative, it indicates the need to burn some fSOL to reduce nF
             max_fSOL_to_burn = nF * fSOL_staked_per  # Calculate % of the current fSOL supply available to be redeem
-            fSOL_to_burn = min(-fSOL_adjustment, max_fSOL_to_burn)  # Determine the actual amount to burn, without exceeding 50%
+            fSOL_to_burn = -min(-fSOL_adjustment, max_fSOL_to_burn)  # Determine the actual amount to burn, without exceeding 50%
 
-            nF -= fSOL_to_burn  # Correctly reduce nF by the burn amount to reflect the burning of fSOL
-            return fSOL_adjustment
+            return fSOL_to_burn
         
         return fSOL_adjustment
             
@@ -133,13 +132,13 @@ def run_simulation(simulated_prices):
     # Function to adjust action probabilities based on collateral ratio
     def get_action_probabilities(collateral_ratio):
         if collateral_ratio > 5:
-            return {'fSOL_mint': 1, 'xSOL_mint': 0.6}
+            return {'fSOL_mint': 1, 'xSOL_mint': 0.10}
         elif 3 < collateral_ratio <= 5:
-            return {'fSOL_mint': 0.90, 'xSOL_mint': 0.65}
+            return {'fSOL_mint': 0.90, 'xSOL_mint': 0.25}
         elif 2.2 < collateral_ratio <= 3:
-            return {'fSOL_mint': 0.8, 'xSOL_mint': 0.70}
+            return {'fSOL_mint': 0.8, 'xSOL_mint': 0.40}
         elif stab_mod2 < collateral_ratio <= 2.2:
-            return {'fSOL_mint': 0.60, 'xSOL_mint': 0.85}
+            return {'fSOL_mint': 0.60, 'xSOL_mint': 0.6}
         elif 1 < collateral_ratio <= stab_mod2:
             return {'fSOL_mint': 0.00, 'xSOL_mint': 0.80} #fSOL mint disable, xSOL burn fees set at 8% and minting to 0%
         else:
@@ -162,12 +161,12 @@ def run_simulation(simulated_prices):
                     'xSOL_mint_amount': np.random.normal(0.01, 0.04), 
                     'fSOL_burn_amount': np.random.normal(0.01, 0.04), 
                     'xSOL_burn_amount': np.random.normal(0.02, 0.05)}
-        elif 1.5 < collateral_ratio <= 2.2:
+        elif stab_mod2 < collateral_ratio <= 2.2:
             return {'fSOL_mint_amount': np.random.normal(0.01, 0.03), 
                     'xSOL_mint_amount': np.random.normal(0.03, 0.05), 
                     'fSOL_burn_amount': np.random.normal(0.03, 0.05), 
                     'xSOL_burn_amount': np.random.normal(0.01, 0.03)}
-        elif 1 < collateral_ratio <= 1.5:
+        elif 1 < collateral_ratio <= stab_mod2:
             return {'fSOL_mint_amount': np.random.normal(0.00, 0.01), 
                     'xSOL_mint_amount': np.random.normal(0.02, 0.5), 
                     'fSOL_burn_amount': np.random.normal(0.05, 0.1), 
@@ -191,17 +190,17 @@ def run_simulation(simulated_prices):
         pX = recalculate_pX(pSOL_current)
         
         # Recalculate the collateral ratio after adjustment
-        collateral_ratio = calculate_collateral_ratio(nSOL, pSOL_current, nF, pF)
+        collateral_ratio_before_mb = calculate_collateral_ratio(nSOL, pSOL_current, nF, pF)
         
         # Get the action probabilities for the current collateral ratio
-        probabilities = get_action_probabilities(collateral_ratio)
+        probabilities = get_action_probabilities(collateral_ratio_before_mb)
         
         # Decide actions for fSOL and xSOL based on the probabilities
         action_fSOL = 'mint' if np.random.rand() < probabilities['fSOL_mint'] else 'burn'
         action_xSOL = 'mint' if np.random.rand() < probabilities['xSOL_mint'] else 'burn'
         
         # Determine mint/burn amount percentage of the current supply
-        amount_to_mint = get_mint_amount(collateral_ratio)
+        amount_to_mint = get_mint_amount(collateral_ratio_before_mb)
         fSOL_to_mint_per = amount_to_mint['fSOL_mint_amount']
         xSOL_to_mint_per = amount_to_mint['xSOL_mint_amount']
         fSOL_to_burn_per = amount_to_mint['fSOL_burn_amount']
@@ -217,19 +216,24 @@ def run_simulation(simulated_prices):
         if action_fSOL == 'burn':
             mint_burn_amount_fSOL = -abs(burn_amount_fSOL)
         else:
-            mint_burn_amount_fSOL = mint_amount_fSOL
+            mint_burn_amount_fSOL = abs(mint_amount_fSOL)
 
         if action_xSOL == 'burn':
             mint_burn_amount_xSOL = -abs(burn_amount_xSOL)
         else:
-            mint_burn_amount_xSOL = mint_amount_xSOL
+            mint_burn_amount_xSOL = abs(mint_amount_xSOL)
         
         # Perform the minting/burning actions
         mint_fSOL(mint_burn_amount_fSOL, pSOL_current)
         mint_xSOL(mint_burn_amount_xSOL, pSOL_current)
 
         # Check if stability pool intervention is need
-        stability_pool = use_stability_pool(pX)
+        stability_pool = use_stability_pool(pX, nF)
+
+        mint_fSOL(stability_pool, pSOL_current)
+
+        collateral_ratio = calculate_collateral_ratio(nSOL, pSOL_current, nF, pF)
+
 
         # Update counter if stability pool is used or if xSOL is negative
         if stability_pool < 0:
@@ -305,6 +309,8 @@ for path_results in all_runs_results:
 # Calculate averages
 average_stability_pool_non_zero = total_stability_pool_non_zero / total_runs / T *100
 average_xSOL_negative_price = total_xSOL_negative_price / total_runs / T * 100
+average_xSOL_negative_price_run = (total_xSOL_negative_price / total_runs) * 100
 
 print(f"Average times stability pool returned non-zero: {average_stability_pool_non_zero}%")
-print(f"Average times xSOL price was negative: {average_xSOL_negative_price}%")
+print(f"Percentage of collaterize fail on all the run: {average_xSOL_negative_price_run}%")
+print(f"Average times xSOL price was negative, on all the run + all the price tracked: {average_xSOL_negative_price}%")
