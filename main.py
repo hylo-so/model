@@ -2,8 +2,17 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from monteCarlo import generate_monte_carlo_price_paths
-from hyloModelisation import run_simulation
+from modelisation.monteCarlo import generate_monte_carlo_price_paths
+from modelisation.hyloModelisation import run_simulation
+
+# Parameters
+file_path = './Solana Historical Data.csv'
+beta = 1.6
+T = 1000
+N = 100
+stab_mod1_range = np.arange(1.3, 1.9, 0.1) 
+stab_mod2_range = np.arange(1.3, 1.9, 0.1)
+num_runs_per_path = 2  # Number of runs for each parameter setting
 
 
 def simulate_and_collect_data(file_path, beta, T, N, stab_mod1_range, stab_mod2_range, num_runs_per_path):
@@ -39,14 +48,7 @@ def simulate_and_collect_data(file_path, beta, T, N, stab_mod1_range, stab_mod2_
             results.append((stab_mod1, stab_mod2, avg_stability_pool, avg_negative_prices, avg_collateral_ratio))
     return pd.DataFrame(results, columns=['stab_mod1', 'stab_mod2', 'Avg Stability Pool Non-Zero', 'Avg Negative xSOL Prices', 'Avg Collateral Ratio'])
 
-# Parameters
-file_path = './Solana Historical Data.csv'
-beta = 1
-T = 1000
-N = 100
-stab_mod1_range = np.arange(1.3, 1.9, 0.1) 
-stab_mod2_range = np.arange(1.3, 1.9, 0.1)
-num_runs_per_path = 2  # Number of runs for each parameter setting
+
 
 
 # Round to 1 decimal place

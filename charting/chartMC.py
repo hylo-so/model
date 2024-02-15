@@ -1,4 +1,4 @@
-from monteCarlo import generate_monte_carlo_price_paths
+from modelisation.monteCarlo import generate_monte_carlo_price_paths
 import matplotlib.pyplot as plt
 
 file_path = './Solana Historical Data.csv'
