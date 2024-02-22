@@ -7,7 +7,7 @@ from modelisation.hyloModelisation import run_simulation
 
 # Parameters
 file_path = './Solana Historical Data.csv'
-beta = 1.6
+beta = 1.5
 T = 1000
 N = 100
 stab_mod1_range = np.arange(1.3, 1.9, 0.1) 
@@ -42,8 +42,8 @@ def simulate_and_collect_data(file_path, beta, T, N, stab_mod1_range, stab_mod2_
                     negative_prices_counts.append(negative_price_count)
                     collateral_ratios.append(collateral_ratio)
             # Aggregate and store results
-            avg_stability_pool = np.mean(stability_pool_counts)
-            avg_negative_prices = np.mean(negative_prices_counts)
+            avg_stability_pool = np.mean(stability_pool_counts)/ T * 100
+            avg_negative_prices = np.mean(negative_prices_counts) * 100
             avg_collateral_ratio = np.mean(collateral_ratios)
             results.append((stab_mod1, stab_mod2, avg_stability_pool, avg_negative_prices, avg_collateral_ratio))
     return pd.DataFrame(results, columns=['stab_mod1', 'stab_mod2', 'Avg Stability Pool Non-Zero', 'Avg Negative xSOL Prices', 'Avg Collateral Ratio'])
