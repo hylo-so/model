@@ -1,13 +1,17 @@
 import pandas as pd
 import numpy as np
+import configparser
+
 
 
 def run_simulation(simulated_prices, stab_mod1, stab_mod2):
 
+    config = configparser.ConfigParser()
+    config.read('config.ini')
     
-    # input
-    amount_SOL_initial = 300 # Intial amount of SOL 
-    fSOL_staked_per = 0.5 # Percentage of the fSOL supply staked in the stability Pool
+    amount_SOL_initial = config.getint('settings', 'amount_SOL_initial')
+    fSOL_staked_per = config.getfloat('settings', 'fSOL_staked_per')
+
 
 
     # Initialization of Stability Pool and xSOL negative counter
@@ -130,37 +134,35 @@ def run_simulation(simulated_prices, stab_mod1, stab_mod2):
     
     # Function to defined the amount to mint based on the current collateral_ratio
     def get_mint_amount(collateral_ratio):
+        # Determine which section of the INI file to read from based on the collateral_ratio
         if collateral_ratio > 5:
-            return {'fSOL_mint_amount': np.random.normal(0.05, 0.1), 
-                    'xSOL_mint_amount': np.random.normal(0.00, 0.01), 
-                    'fSOL_burn_amount': np.random.normal(0.00, 0.01), 
-                    'xSOL_burn_amount': np.random.normal(0.05, 0.1)}
+            section_prefix = 'CR5'
         elif 3 < collateral_ratio <= 5:
-            return {'fSOL_mint_amount': np.random.normal(0.03, 0.08), 
-                    'xSOL_mint_amount': np.random.normal(0.00, 0.02), 
-                    'fSOL_burn_amount': np.random.normal(0.00, 0.02), 
-                    'xSOL_burn_amount': np.random.normal(0.03, 0.08)}
+            section_prefix = 'CR3-5'
         elif 2.2 < collateral_ratio <= 3:
-            return {'fSOL_mint_amount': np.random.normal(0.02, 0.05), 
-                    'xSOL_mint_amount': np.random.normal(0.01, 0.04), 
-                    'fSOL_burn_amount': np.random.normal(0.01, 0.04), 
-                    'xSOL_burn_amount': np.random.normal(0.02, 0.05)}
-        elif stab_mod2 < collateral_ratio <= 2.2:
-            return {'fSOL_mint_amount': np.random.normal(0.01, 0.03), 
-                    'xSOL_mint_amount': np.random.normal(0.03, 0.05), 
-                    'fSOL_burn_amount': np.random.normal(0.03, 0.05), 
-                    'xSOL_burn_amount': np.random.normal(0.01, 0.03)}
-        elif 1 < collateral_ratio <= stab_mod2:
-            return {'fSOL_mint_amount': np.random.normal(0.00, 0.01), 
-                    'xSOL_mint_amount': np.random.normal(0.02, 0.04), 
-                    'fSOL_burn_amount': np.random.normal(0.05, 0.1), 
-                    'xSOL_burn_amount': np.random.normal(0.00, 0.02)}
-        else:
-            return {'fSOL_mint_amount': np.random.normal(0.00, 0.01), 
-                    'xSOL_mint_amount': np.random.normal(0.05, 0.1), 
-                    'fSOL_burn_amount': np.random.normal(0.05, 0.1), 
-                    'xSOL_burn_amount': np.random.normal(0.00, 0.01)}
-        
+            section_prefix = 'CR22-3'
+        elif 1 < collateral_ratio <= 2.2:  # Assuming stab_mod2 is within this range for this example
+            section_prefix = 'CRmod2-22'
+        else:  # Assuming collateral_ratio <= 1 for the 'else' case, using CR1-mod2 as a fallback
+            section_prefix = 'CR1-mod2'
+
+        # Constructing the keys to fetch the right values
+        fSOL_mint_mean_key = f'{section_prefix}_fSOL_mint_mean'
+        fSOL_mint_std_key = f'{section_prefix}_fSOL_mint_std'
+        xSOL_mint_mean_key = f'{section_prefix}_xSOL_mint_mean'
+        xSOL_mint_std_key = f'{section_prefix}_xSOL_mint_std'
+        fSOL_burn_mean_key = f'{section_prefix}_fSOL_burn_mean'
+        fSOL_burn_std_key = f'{section_prefix}_fSOL_burn_std'
+        xSOL_burn_mean_key = f'{section_prefix}_xSOL_burn_mean'
+        xSOL_burn_std_key = f'{section_prefix}_xSOL_burn_std'
+
+        # Use the constructed keys to get values from the config
+        return {
+            'fSOL_mint_amount': np.random.normal(config.getfloat('mint_amount', fSOL_mint_mean_key), config.getfloat('mint_amount', fSOL_mint_std_key)), 
+            'xSOL_mint_amount': np.random.normal(config.getfloat('mint_amount', xSOL_mint_mean_key), config.getfloat('mint_amount', xSOL_mint_std_key)), 
+            'fSOL_burn_amount': np.random.normal(config.getfloat('mint_amount', fSOL_burn_mean_key), config.getfloat('mint_amount', fSOL_burn_std_key)), 
+            'xSOL_burn_amount': np.random.normal(config.getfloat('mint_amount', xSOL_burn_mean_key), config.getfloat('mint_amount', xSOL_burn_std_key))
+        }
     #####################LOOP#####################
         
     
