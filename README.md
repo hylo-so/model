@@ -1,76 +1,53 @@
-# Hylo Modelisation Based on Historical Market Movements
-## Overview
-This project aims to model the behavior of the Hylo protocol. By analyzing past data and simulated future return using Monte Carlo model, it seek to understand how the protocol reacts under various market conditions, specifically focusing on the collateral ratio's impact on asset minting and burning.
+# Hylo Modelisation
 
+## Overview
+This project aims to model the behavior of the Hylo protocol. By analyzing past data and simulated future returns using a Monte Carlo model, it seeks to understand how the protocol reacts under various market conditions, specifically focusing on the collateral ratio's impact on asset minting and burning.
 
 ## Assumptions in Pre-setup Modelisation
 The model relies on the following key assumptions regarding the probability of net burn or mint of fSOL and xSOL after each trading day:
 
-* **Collateral Ratio Impact:**
-  * A higher collateral ratio increases the likelihood of fSOL being minted and xSOL being burned. This scenario suggests a market perception of increased security or over-collateralization, encouraging the minting of fSOL. Additionally, the low effective leverage of xSOL makes it less attractive to traders.
-  * Conversely, a lower collateral ratio increases the likelihood of fSOL being burned and xSOL being minted. This situation reflects concerns over under-collateralization, leading fSOL holders to burn fSOL in order to redeem its equivalent value in SOL. It also signifies a growing interest among traders in xSOL, due to the higher effective leverage offered.
+- **Collateral Ratio Impact:**
+  - A higher collateral ratio increases the likelihood of fSOL being minted and xSOL being burned. This scenario suggests a market perception of increased security or over-collateralization, encouraging the minting of fSOL. Additionally, the low effective leverage of xSOL makes it less attractive to traders.
+  - Conversely, a lower collateral ratio increases the likelihood of fSOL being burned and xSOL being minted. This situation reflects concerns over under-collateralization, leading fSOL holders to burn fSOL in order to redeem its equivalent value in SOL. It also signifies a growing interest among traders in xSOL, due to the higher effective leverage offered.
 
 ## Methodology
-The model undergoes multiple iterations, with each run specifically designed to assess frequency of the stability pool usage and the frequency of negative xSOL price occurrences, negative xSOL signaling a failure in maintaining the collateralization of fSOL. Data collected after detecting a negative xSOL price are not considered in this model, as the protocol would require re-collateralization by the team to resume operations, a process not covered by this simulation.
+The model undergoes multiple iterations, with each run specifically designed to assess the frequency of the stability pool usage and the frequency of negative xSOL price occurrences. Negative xSOL signaling a failure in maintaining the collateralization of fSOL. Data collected after detecting a negative xSOL price are not considered in this model, as the protocol would require re-collateralization by the team to resume operations, a process not covered by this simulation.
 
 ## Limitations
 This model primarily focuses on daily price returns, whereas, in practice, the protocol's stability would be monitored on a minute-by-minute basis. Consequently, the model may occasionally indicate under-collateralization situations that the protocol, in real-time operations, could effectively manage and mitigate.
 
 Moreover, the model incorporates a stability pool mechanism, where fSOL is burned to redeem SOL, but it does not account for the conversion from fSOL to xSOL. This conversion process represents an additional strategy for the protocol to ensure stability, highlighting a significant aspect not covered in the current modeling approach.
 
+## Setup and Usage
 
-## Usage of the Model
+### Prerequisites
+- Ensure you have [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed on your system.
 
-To execute the model, simply run `python3 main.py`. This will launch the model with the default parameters. If you wish to customize these parameters, you can edit the main.py file and update the following variables:
+### Installation
 
-* `beta`: The beta parameter of the Monte Carlo simulation.
-* `T`: The number of days for the Monte Carlo simulation.
-* `N`: The number of different price paths generated.
-* `stab_mod1_range`: The activation range for Stability Mode 1 to test, where the first argument is the lowest stability mode to test, the second argument is the highest, and the third argument is the incrementation between each test.
-* `stab_mod2_range`: The activation range for Stability Mode 2 to test, similar to stab_mod1_range in structure.
-* `num_runs_per_path`: The number of runs of the model on each path.
+1. **Clone the repository**  
+git clone <https://github.com/hylo-so/model.git> 
 
-Upon completion of the calculations, two heat maps will be displayed. The first heat map shows the percentage of time that a run has faced a de-collateralization event, and the second heat map shows the percentage of time the stability pool has been utilized for different combination of stability mod.
-
-### Using historical price return for a single beta run
-
-To utilize the model effectively, follow these steps in `modHistoricalPrice.py` to customize your simulation:
-
-Update the following variables according to your requirements:
-* Initial SOL collateral `amount_SOL_initial`,
-* Minimum Collateralization Ratio `stab_mod1`,
-* Disable fSOL minting `stab_mod2`
-* Percentage of fSOL in the stability pool `fSOL_staked_per`,
-* Number of runs (setup for 1000 run) `for _ in range(1000):`.
-
-You can also change the burn/mint amount of xSOL/fSOL based on the collateralization ratio by adjusting the mean and standard deviation for different events in `get_mint_amount()`.
-
-Modify the likelihood of a burn/mint event for xSOL/fSOL according to the collateralization ratio by altering the percentages in `get_action_probabilities()`.
-
-To experience varying randomness across each run, you may comment out line 4: `np.random.seed(7)`.
-
-Once your setup is complete, execute the script by running `python3 modHistoricalPrice.py`. The results from the last run will be stored in a CSV file `simulation_results.csv`.
-
-For visualizing the results of the csv file, use the command `python3 chart.py` to generate a chart.
+2. **Create the Conda environment**  
+Create a Conda environment using the `environment.yml` file provided in the project:
+`conda <env-name> create -f environment.yml`
 
 
+3. **Activate the environment**  
+Activate the Conda environment:
+`conda activate <env-name>`
 
-### Using simulated future price return for a single beta run
 
-You can also run the model with future price generated by Monte Carlo simulation
+### Running the Model
+To execute the model, run:
+`python3 main.py`
 
-To utilize the model effectively, follow these steps in `modMCPrice.py` to customize your simulation:
+This will launch the model with the default parameters. To customize these parameters, edit `main.py` and update the following variables as needed:
+- `beta`: The beta parameter of the Monte Carlo simulation.
+- `T`: The number of days for the Monte Carlo simulation.
+- `N`: The number of different price paths generated.
+- `stab_mod1_range`: The activation range for Stability Mode 1 to test.
+- `stab_mod2_range`: The activation range for Stability Mode 2 to test.
+- `num_runs_per_path`: The number of runs of the model on each path.
 
-Update the following variables according to your requirements:
-* Initial SOL collateral `amount_SOL_initial`,
-* Minimum Collateralization Ratio `stab_mod1`,
-* Disable fSOL minting `stab_mod2`
-* Percentage of fSOL in the stability pool `fSOL_staked_per`,
-* Change number of daily return (T), and number of path generated (N) `generate_monte_carlo_price_paths(file_path, T=1000, N=30)`
-* Number of runs per path generated `num_runs_per_path`.
-
-You can also change the burn/mint amount of xSOL/fSOL based on the collateralization ratio by adjusting the mean and standard deviation for different events in `get_mint_amount()`.
-
-Modify the likelihood of a burn/mint event for xSOL/fSOL according to the collateralization ratio by altering the percentages in `get_action_probabilities()`.
-
-Once your setup is complete, execute the script by running `python3 modMCPrice.py`.
+Upon completion, two heat maps will be displayed showing the percentage of time that a run has faced a de-collateralization event, and the percentage of time the stability pool has been utilized for different combinations of stability mod.
