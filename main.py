@@ -4,15 +4,24 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from modelisation.monteCarlo import generate_monte_carlo_price_paths
 from modelisation.hyloModelisation import run_simulation
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+beta = config.getfloat('settings', 'beta')
+T = config.getint('settings', 'T')
+N = config.getint('settings', 'N')
+sModeLower = config.getfloat('settings', 'sModeLower')
+sModeUpper = config.getfloat('settings', 'sModeUpper')
+sModeStep = config.getfloat('settings', 'sModeStep')
+num_runs_per_path = config.getint('settings', 'num_runs_per_path')
 
 # Parameters
 file_path = './Solana Historical Data.csv'
-beta = 1.5
-T = 1000
-N = 100
-stab_mod1_range = np.arange(1.3, 1.9, 0.1) 
-stab_mod2_range = np.arange(1.3, 1.9, 0.1)
-num_runs_per_path = 2  # Number of runs for each parameter setting
+stab_mod1_range = np.arange(sModeLower, sModeUpper,sModeStep) 
+stab_mod2_range = np.arange(sModeLower, sModeUpper, sModeStep)
+
 
 
 def simulate_and_collect_data(file_path, beta, T, N, stab_mod1_range, stab_mod2_range, num_runs_per_path):

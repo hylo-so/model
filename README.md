@@ -42,12 +42,19 @@ Activate the Conda environment:
 To execute the model, run:
 `python3 main.py`
 
-This will launch the model with the default parameters. To customize these parameters, edit `main.py` and update the following variables as needed:
+This will launch the model with the default parameters. To customize these parameters, edit `config.ini` and update the following variables as needed:
+
 - `beta`: The beta parameter of the Monte Carlo simulation.
 - `T`: The number of days for the Monte Carlo simulation.
 - `N`: The number of different price paths generated.
-- `stab_mod1_range`: The activation range for Stability Mode 1 to test.
-- `stab_mod2_range`: The activation range for Stability Mode 2 to test.
+- `sModeLower`: The lower stability mode collateral ratio threshold to test.
+- `sModeUpper`: The highest stability mode collateral ratio threshold to test.
+- `sModeStep`: The step size between tests of different stability modes.
+- `amount_SOL_initial`: The initial amount of SOL in the collateral pool.
+- `fSOL_staked_per`: The percentage of fSOL staked in the stability pool.
 - `num_runs_per_path`: The number of runs of the model on each path.
+- `[action_probabilities]` defines the probability of a mint or burn action occurring, depending on the Collateral Ratio. For example, `CR3-5_fSOL_mint` specifies the probability of fSOL being minted when the Collateral Ratio is between 3 and 5.
+- `[mint_amount]` defines the normal distribution parameters for the amount of tokens minted or burned. For instance, `CR3-5_fSOL_mint_mean` and `CR3-5_fSOL_mint_std` specify the mean and standard deviation, respectively, of the normal distribution for the amount of fSOL minted when the Collateral Ratio is between 3 and 5.
+
 
 Upon completion, two heat maps will be displayed showing the percentage of time that a run has faced a de-collateralization event, and the percentage of time the stability pool has been utilized for different combinations of stability mod.
