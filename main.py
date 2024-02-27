@@ -27,9 +27,8 @@ stab_mod2_range = np.arange(sModeLower, sModeUpper, sModeStep)
 
 def simulate_and_collect_data(file_path, beta, T, N, stab_mod1_range, stab_mod2_range, num_runs_per_path):
     results = []
-    total_iterations = len(stab_mod1_range) * len(stab_mod2_range) * num_runs_per_path
-    
     stability_thresholds = [(mod1, mod2) for mod1, mod2 in product(stab_mod1_range, stab_mod2_range) if mod1 <= mod2]
+    total_iterations = len(stability_thresholds)
     for (current_iteration, (stab_mod1, stab_mod2)) in enumerate(stability_thresholds, start=1):
         # Print current iteration
         print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod1={stab_mod1:.2f}, stab_mod2={stab_mod2:.2f})")
