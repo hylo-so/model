@@ -1,3 +1,4 @@
+from itertools import product
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -27,34 +28,27 @@ stab_mod2_range = np.arange(sModeLower, sModeUpper, sModeStep)
 def simulate_and_collect_data(file_path, beta, T, N, stab_mod1_range, stab_mod2_range, num_runs_per_path):
     results = []
     total_iterations = len(stab_mod1_range) * len(stab_mod2_range) * num_runs_per_path
-    current_iteration = 0
-    for stab_mod1 in stab_mod1_range:
-        for stab_mod2 in stab_mod2_range:
-            if stab_mod1 > stab_mod2:
-                # Skip the calculation if stab_mod1 is greater than stab_mod2
-                current_iteration += 1
-                print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod1={stab_mod1:.2f}, stab_mod2={stab_mod2:.2f})")
-                continue
-            # Initialize metrics
-            stability_pool_counts, negative_prices_counts, collateral_ratios = [], [], []
-            for _ in range(num_runs_per_path):
-                # Update and print the progress
-                current_iteration += 1
-                print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod1={stab_mod1:.2f}, stab_mod2={stab_mod2:.2f})")
-
-                # Generate price paths
-                price_paths, _ = generate_monte_carlo_price_paths(file_path, beta, T, N)
-                for path in price_paths.T:
-                    # Run the simulation with current parameters
-                    stability_pool_count, negative_price_count, collateral_ratio = run_simulation(path, stab_mod1, stab_mod2)
-                    stability_pool_counts.append(stability_pool_count)
-                    negative_prices_counts.append(negative_price_count)
-                    collateral_ratios.append(collateral_ratio)
-            # Aggregate and store results
-            avg_stability_pool = np.mean(stability_pool_counts)/ T * 100
-            avg_negative_prices = np.mean(negative_prices_counts) * 100
-            avg_collateral_ratio = np.mean(collateral_ratios)
-            results.append((stab_mod1, stab_mod2, avg_stability_pool, avg_negative_prices, avg_collateral_ratio))
+    
+    stability_thresholds = [(mod1, mod2) for mod1, mod2 in product(stab_mod1_range, stab_mod2_range) if mod1 <= mod2]
+    for (current_iteration, (stab_mod1, stab_mod2)) in enumerate(stability_thresholds, start=1):
+        # Print current iteration
+        print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod1={stab_mod1:.2f}, stab_mod2={stab_mod2:.2f})")
+        # Initialize metrics
+        stability_pool_counts, negative_prices_counts, collateral_ratios = [], [], []
+        for _ in range(num_runs_per_path):
+            # Generate price paths
+            price_paths, _ = generate_monte_carlo_price_paths(file_path, beta, T, N)
+            for path in price_paths.T:
+                # Run the simulation with current parameters
+                stability_pool_count, negative_price_count, collateral_ratio = run_simulation(path, stab_mod1, stab_mod2)
+                stability_pool_counts.append(stability_pool_count)
+                negative_prices_counts.append(negative_price_count)
+                collateral_ratios.append(collateral_ratio)
+        # Aggregate and store results
+        avg_stability_pool = np.mean(stability_pool_counts)/ T * 100
+        avg_negative_prices = np.mean(negative_prices_counts) * 100
+        avg_collateral_ratio = np.mean(collateral_ratios)
+        results.append((stab_mod1, stab_mod2, avg_stability_pool, avg_negative_prices, avg_collateral_ratio))
     return pd.DataFrame(results, columns=['stab_mod1', 'stab_mod2', 'Avg Stability Pool Non-Zero', 'Avg Negative xSOL Prices', 'Avg Collateral Ratio'])
 
 
