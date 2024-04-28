@@ -215,9 +215,6 @@ def run_simulation(simulated_prices, stab_mod1, stab_mod2):
 
         # Check if stability pool intervention is need
         stability_pool = use_stability_pool(pX, nF)
-
-        mint_fSOL(stability_pool, pSOL_current)
-
         collateral_ratio = calculate_collateral_ratio(nSOL, pSOL_current, nF, pF)
 
 

@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 import configparser
+from modelisation.utils.simulation_utils import (adjust_SOL_reserve, mint_fSOL, mint_xSOL, recalculate_pX,
+                              calculate_collateral_ratio, adjust_fSOL_to_target_CR, use_stability_pool)
+
+
 
 class Simulation:
     def __init__(self, config_path='config.ini'):
@@ -23,43 +27,27 @@ class Simulation:
         self.nF = (pSOL_initial * self.nSOL) / 2
         self.nX = self.nF
 
-    def adjust_SOL_reserve(self, amount_in_dollars, pSOL_current):
-        SOL_change = amount_in_dollars / pSOL_current
-        self.nSOL += SOL_change
-
     def mint_fSOL(self, amount, pSOL_current):
-        self.nF += amount
-        amount_in_dollars = amount * self.pF
-        self.adjust_SOL_reserve(amount_in_dollars, pSOL_current)
+        # Update nF and nSOL by minting fSOL
+        self.nF, self.nSOL = mint_fSOL(self.nF, self.nSOL, amount, self.pF, pSOL_current)
 
     def mint_xSOL(self, amount, pSOL_current):
-        self.nX += amount
-        amount_in_dollars = amount * self.pX
-        self.adjust_SOL_reserve(amount_in_dollars, pSOL_current)
+        # Update nX and nSOL by minting xSOL
+        self.nX, self.nSOL = mint_xSOL(self.nX, self.nSOL, amount, self.pX, pSOL_current)
 
     def recalculate_pX(self, pSOL_current):
-        total_value_current = self.nSOL * pSOL_current
-        self.pX = (total_value_current - (self.nF * self.pF)) / self.nX
+        # Update pX based on current market values
+        self.pX = recalculate_pX(self.nSOL, pSOL_current, self.nF, self.pF, self.nX)
         return self.pX
 
     def calculate_collateral_ratio(self):
-        total_SOL_value = self.nSOL * self.pSOL
-        market_cap_fSOL = self.nF * self.pF
-        collateralization_ratio_fSOL = total_SOL_value / market_cap_fSOL
-        return collateralization_ratio_fSOL
-
-    def adjust_fSOL_to_target_CR(self, stab_mod1):
-        nF_required = (self.nX * self.pX) / (self.pF * (stab_mod1 - 1))
-        fSOL_adjustment = nF_required - self.nF
-        return fSOL_adjustment if fSOL_adjustment <= 0 else 0
+        # Calculate the collateral ratio
+        return calculate_collateral_ratio(self.nSOL, self.pSOL, self.nF, self.pF)
 
     def use_stability_pool(self, stab_mod1):
-        fSOL_adjustment = self.adjust_fSOL_to_target_CR(stab_mod1)
-        if fSOL_adjustment < 0:
-            max_fSOL_to_burn = self.nF * self.fSOL_staked_per
-            fSOL_to_burn = -min(-fSOL_adjustment, max_fSOL_to_burn)
-            return fSOL_to_burn
-        return 0
+        # Use stability pool to adjust fSOL holdings
+        return use_stability_pool(self.nF, self.fSOL_staked_per, stab_mod1, self.nX, self.pX, self.pF)
+
 
     def get_action_probabilities(self, collateral_ratio, stab_mod2):
         if collateral_ratio > 5:
@@ -115,6 +103,7 @@ class Simulation:
         xSOL_negative_price_count = 0
 
         for day, pSOL_current in enumerate(simulated_prices):
+
             self.pSOL = pSOL_current
             self.pX = self.recalculate_pX(pSOL_current)
             collateral_ratio = self.calculate_collateral_ratio()
@@ -173,6 +162,8 @@ class Simulation:
                 "nF": self.nF,
                 "pX": self.pX,
                 "nX": self.nX,
+                "Marketcap fSOL": self.pF * self.nF,
+                "Marketcap xSOL": self.pX * self.nX,
                 "fSOL adjustment":  stability_pool,
                 "Collateralization ratio": collateral_ratio
             }
@@ -180,6 +171,8 @@ class Simulation:
 
             if self.pX < 0:
                 break  # Exit the loop if pX is negative
+
+            
 
         results_df = pd.DataFrame(daily_data)
         results_csv_path = './simulation_results.csv'
