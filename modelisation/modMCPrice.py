@@ -1,5 +1,7 @@
 from monteCarlo import generate_monte_carlo_price_paths
-from hyloModelisation import run_simulation
+from hyloModelisation import Simulation
+
+sim = Simulation()
 
 #np.random.seed(7)
 
@@ -8,12 +10,12 @@ file_path = '../Solana Historical Data.csv'
 
 ####INPUT####
 T = 1000 # Number of day in each montecarlo simulation
-N = 100 # Number of simulation created
+N = 1 # Number of simulation created
 beta = 1.0 # Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
 stab_mod1 = 1.3 # Stability mode 1 collaterization ratio threshold, usage of stability pool
 stab_mod2 = 1.5 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
 VaR_confidence_level = 0.999
-num_runs_per_path = 5  # Define how many times to run the simulation per price path
+num_runs_per_path = 1  # Define how many times to run the simulation per price path
 
 
 results = generate_monte_carlo_price_paths(file_path, beta, T, N, VaR_confidence_level)
@@ -27,7 +29,7 @@ for path_index, path in enumerate(price_paths.T):  # Transpose to iterate over e
     path_results = []  # Store results for each run of this path
     
     for run in range(num_runs_per_path):
-        run_result = run_simulation(path, stab_mod1, stab_mod2)  # Run the simulation with the current path
+        run_result = sim.run_simulation(path, stab_mod1, stab_mod2)  # Run the simulation with the current path
         path_results.append(run_result)  # Collect results for this run
     
     all_runs_results.append(path_results)  # Store all runs for this path

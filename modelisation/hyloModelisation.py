@@ -109,6 +109,7 @@ class Simulation:
     def run_simulation(self, simulated_prices, stab_mod1, stab_mod2):
         daily_data = []
         self.pSOL = simulated_prices[0]
+        self.__init__()
         self.initialize_simulation(self.pSOL)
         stability_pool_non_zero_count = 0
         xSOL_negative_price_count = 0
@@ -166,13 +167,19 @@ class Simulation:
                 "day": day,
                 "pSOL": self.pSOL,
                 "nSOL": self.nSOL,
+                "daily mint/burn of fSOL": mint_burn_amount_fSOL,
+                "daily mint/burn of xSOL": mint_burn_amount_xSOL,
                 "pF": self.pF,
                 "nF": self.nF,
                 "pX": self.pX,
                 "nX": self.nX,
+                "fSOL adjustment":  stability_pool,
                 "Collateralization ratio": collateral_ratio
             }
             daily_data.append(day_data)
+
+            if self.pX < 0:
+                break  # Exit the loop if pX is negative
 
         results_df = pd.DataFrame(daily_data)
         results_csv_path = './simulation_results.csv'
@@ -180,10 +187,23 @@ class Simulation:
 
         return stability_pool_non_zero_count, xSOL_negative_price_count, collateral_ratio,
 
-# Usage
+
+
+# Path to the CSV file
+csv_file_path = 'Solana Historical Data.csv'
+
+# Read the CSV file using pandas
+data = pd.read_csv(csv_file_path)
+
+# Extract the 'Price' column as a list
+simulated_prices = data['Price'].tolist()
+
+# Initialize the Simulation
 sim = Simulation()
-simulated_prices = [100, 102, 98, 105, 100, 102, 98, 105, 98, 105, 100, 102, 98, 105, 98, 105, 100, 102, 98, 105, 98, 105, 100, 102, 98, 105]  # Example prices
-stab_mod1 = 1.3
+
+# Define some parameters
+stab_mod1 = 1.5
 stab_mod2 = 2.2
+
+# Run the simulation with the prices extracted from the CSV
 results = sim.run_simulation(simulated_prices, stab_mod1, stab_mod2)
-print(results)
