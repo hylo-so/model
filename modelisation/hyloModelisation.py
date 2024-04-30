@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 import configparser
-from modelisation.utils.simulation_utils import (adjust_SOL_reserve, mint_fSOL, mint_xSOL, recalculate_pX,
-                              calculate_collateral_ratio, adjust_fSOL_to_target_CR, use_stability_pool)
+from utils.simulation_utils import (mint_fSOL, mint_xSOL, recalculate_pX, calculate_collateral_ratio, use_stability_pool)
+from utils.event_distributions import (get_action_probabilities, get_mint_amount)
+
 
 
 
@@ -21,6 +22,7 @@ class Simulation:
         self.pX = 1
         self.nF = None
         self.nX = None
+        
 
     def initialize_simulation(self, pSOL_initial):
         # Calculate nF and nX based on the initial SOL reserve and prices
@@ -48,52 +50,6 @@ class Simulation:
         # Use stability pool to adjust fSOL holdings
         return use_stability_pool(self.nF, self.fSOL_staked_per, stab_mod1, self.nX, self.pX, self.pF)
 
-
-    def get_action_probabilities(self, collateral_ratio, stab_mod2):
-        if collateral_ratio > 5:
-            return {'fSOL_mint': 1, 'xSOL_mint': 0.10}
-        elif 3 < collateral_ratio <= 5:
-            return {'fSOL_mint': 0.90, 'xSOL_mint': 0.25}
-        elif 2.2 < collateral_ratio <= 3:
-            return {'fSOL_mint': 0.8, 'xSOL_mint': 0.40}
-        elif stab_mod2 < collateral_ratio <= 2.2:
-            return {'fSOL_mint': 0.60, 'xSOL_mint': 0.6}
-        elif 1 < collateral_ratio <= stab_mod2:
-            return {'fSOL_mint': 0.00, 'xSOL_mint': 0.80}
-        else:
-            return {'fSOL_mint': 0.00, 'xSOL_mint': 1.00}
-
-    def get_mint_amount(self, collateral_ratio):
-        # Determine the section prefix based on the collateral_ratio
-        if collateral_ratio > 5:
-            section_prefix = 'CR5'
-        elif 3 < collateral_ratio <= 5:
-            section_prefix = 'CR3-5'
-        elif 2.2 < collateral_ratio <= 3:
-            section_prefix = 'CR22-3'
-        elif 1 < collateral_ratio <= 2.2:  # Assuming stab_mod2 is within this range for this example
-            section_prefix = 'CRmod2-22'
-        else:  # Assuming collateral_ratio <= 1 for the 'else' case, using CR1-mod2 as a fallback
-            section_prefix = 'CR1-mod2'
-
-        # Constructing the keys to fetch the right values
-        fSOL_mint_mean_key = f'{section_prefix}_fSOL_mint_mean'
-        fSOL_mint_std_key = f'{section_prefix}_fSOL_mint_std'
-        xSOL_mint_mean_key = f'{section_prefix}_xSOL_mint_mean'
-        xSOL_mint_std_key = f'{section_prefix}_xSOL_mint_std'
-        fSOL_burn_mean_key = f'{section_prefix}_fSOL_burn_mean'
-        fSOL_burn_std_key = f'{section_prefix}_fSOL_burn_std'
-        xSOL_burn_mean_key = f'{section_prefix}_xSOL_burn_mean'
-        xSOL_burn_std_key = f'{section_prefix}_xSOL_burn_std'
-
-        # Use the constructed keys to get values from the config
-        return {
-            'fSOL_mint_amount': np.random.normal(self.config.getfloat('mint_amount', fSOL_mint_mean_key), self.config.getfloat('mint_amount', fSOL_mint_std_key)), 
-            'xSOL_mint_amount': np.random.normal(self.config.getfloat('mint_amount', xSOL_mint_mean_key), self.config.getfloat('mint_amount', xSOL_mint_std_key)), 
-            'fSOL_burn_amount': np.random.normal(self.config.getfloat('mint_amount', fSOL_burn_mean_key), self.config.getfloat('mint_amount', fSOL_burn_std_key)), 
-            'xSOL_burn_amount': np.random.normal(self.config.getfloat('mint_amount', xSOL_burn_mean_key), self.config.getfloat('mint_amount', xSOL_burn_std_key))
-        }
-
     def run_simulation(self, simulated_prices, stab_mod1, stab_mod2):
         daily_data = []
         self.pSOL = simulated_prices[0]
@@ -107,8 +63,8 @@ class Simulation:
             self.pSOL = pSOL_current
             self.pX = self.recalculate_pX(pSOL_current)
             collateral_ratio = self.calculate_collateral_ratio()
-            probabilities = self.get_action_probabilities(collateral_ratio, stab_mod2)
-            amount_to_mint = self.get_mint_amount(collateral_ratio)
+            probabilities = get_action_probabilities(collateral_ratio, stab_mod2)
+            amount_to_mint = get_mint_amount(collateral_ratio, self.config)
             
             # Decide actions for fSOL and xSOL based on the probabilities
             action_fSOL = 'mint' if np.random.rand() < probabilities['fSOL_mint'] else 'burn'
