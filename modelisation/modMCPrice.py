@@ -13,7 +13,7 @@ np.random.seed(5422)
 file_path = '../Solana Historical Data.csv'
 
 ####INPUT####
-T = 1000 # Number of day in each montecarlo simulation
+T = 100 # Number of day in each montecarlo simulation
 N = 1 # Number of simulation created
 beta = 1.0 # Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
 stab_mod1 = 1.1 # Stability mode 1 collaterization ratio threshold, usage of stability pool
