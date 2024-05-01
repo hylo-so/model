@@ -35,5 +35,6 @@ def use_stability_pool(nF, fSOL_staked_per, stab_mod1, nX, pX, pF):
     if fSOL_adjustment < 0:
         max_fSOL_to_burn = nF * fSOL_staked_per
         fSOL_to_burn = -min(-fSOL_adjustment, max_fSOL_to_burn)
-        return fSOL_to_burn
-    return 0
+        if fSOL_to_burn != 0:
+            return fSOL_to_burn, True
+    return 0, False
