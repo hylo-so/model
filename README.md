@@ -30,7 +30,7 @@ git clone <https://github.com/hylo-so/model.git>
 
 2. **Create the Conda environment**  
 Create a Conda environment using the `environment.yml` file provided in the project:
-`conda <env-name> create -f environment.yml`
+`conda create -f environment.yml`
 
 
 3. **Activate the environment**  

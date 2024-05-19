@@ -4,11 +4,12 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from modelisation.monteCarlo import generate_monte_carlo_price_paths
-from modelisation.hyloModelisation import run_simulation
+from modelisation.hyloModelisation import Simulation
 import configparser
 
 config = configparser.ConfigParser()
 config.read('config.ini')
+sim = Simulation()
 
 beta = config.getfloat('settings', 'beta')
 T = config.getint('settings', 'T')
@@ -39,7 +40,7 @@ def simulate_and_collect_data(file_path, beta, T, N, stab_mod1_range, stab_mod2_
             price_paths, _ = generate_monte_carlo_price_paths(file_path, beta, T, N)
             for path in price_paths.T:
                 # Run the simulation with current parameters
-                stability_pool_count, negative_price_count, collateral_ratio = run_simulation(path, stab_mod1, stab_mod2)
+                stability_pool_count, negative_price_count, collateral_ratio = sim.run_simulation(path, stab_mod1, stab_mod2)
                 stability_pool_counts.append(stability_pool_count)
                 negative_prices_counts.append(negative_price_count)
                 collateral_ratios.append(collateral_ratio)
