@@ -17,7 +17,8 @@ T = 1000 # Number of day in each montecarlo simulation
 N = 1 # Number of simulation created
 beta = 1.0 # Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
 stab_mod1 = 1.1 # Stability mode 1 collaterization ratio threshold, usage of stability pool
-stab_mod2 = 1.1 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
+stab_mod2 = 1.3 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
+stab_mod3 = 1.3 # Stability mode 3 collaterization ratio threshold, usage of stability pool 2
 VaR_confidence_level = 0.999
 num_runs_per_path = 1  # Define how many times to run the simulation per price path
 
@@ -33,7 +34,7 @@ for path_index, path in enumerate(price_paths.T):  # Transpose to iterate over e
     path_results = []  # Store results for each run of this path
     
     for run in range(num_runs_per_path):
-        run_result = sim.run_simulation(path, stab_mod1, stab_mod2)  # Run the simulation with the current path
+        run_result = sim.run_simulation(path, stab_mod1, stab_mod2, stab_mod3)  # Run the simulation with the current path
         path_results.append(run_result)  # Collect results for this run
     
     all_runs_results.append(path_results)  # Store all runs for this path
@@ -42,6 +43,7 @@ for path_index, path in enumerate(price_paths.T):  # Transpose to iterate over e
 
 # Initialize counters for aggregation
 total_stability_pool_non_zero = 0
+total_stability_pool_2_non_zero = 0
 total_xSOL_negative_price = 0
 total_runs = 0
 
@@ -51,14 +53,17 @@ for path_results in all_runs_results:
         total_stability_pool_non_zero += result[0]
         total_xSOL_negative_price += result[1]
         avg_collateral_ratio = result[2]/ num_runs_per_path
+        total_stability_pool_2_non_zero += result[3]
     total_runs += len(path_results)
 
 # Calculate averages
 average_stability_pool_non_zero = total_stability_pool_non_zero / total_runs / T *100
+average_stability_pool_2_non_zero = total_stability_pool_2_non_zero / total_runs / T *100
 average_xSOL_negative_price = total_xSOL_negative_price / total_runs / T * 100
 average_xSOL_negative_price_run = (total_xSOL_negative_price / total_runs) * 100
 
 print(f"Average times stability pool returned non-zero: {average_stability_pool_non_zero}%")
+print(f"Average times stability pool 2 returned non-zero: {average_stability_pool_2_non_zero}%")
 print(f"Percentage of runs experiencing collateralization failure: {average_xSOL_negative_price_run}%")
 print(f"Average percentage of days with a negative xSOL price across all simulations: {average_xSOL_negative_price}%")
-print (f"VaR with confidence level of {VaR_confidence_level}:", var_percentile,"%")
+#print (f"VaR with confidence level of {VaR_confidence_level}:", var_percentile,"%")
