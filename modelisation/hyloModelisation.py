@@ -43,10 +43,9 @@ class Simulation:
             return state._replace(nX=new_nX, nSOL=new_nSOL)
         
         elif action == Action.StabilityPoolAdjustment:
-            adjustment_fSOL, adjustment_xSOL, changed = use_stability_pool(state.nF, self.fSOL_staked_per, amount, state.nX, state.pX, state.pF, pSOL_current)
-            new_nF = state.nF + adjustment_fSOL
-            new_nX = state.nX + adjustment_xSOL
-            return state._replace(nF=new_nF, nX=new_nX), changed
+            adjustment, changed = use_stability_pool(state.nF, self.fSOL_staked_per, amount, state.nX, state.pX, state.pF)
+            new_nF = state.nF + adjustment
+            return state._replace(nF=new_nF), changed
         
         elif action == Action.UpdateMarketPrices:
             new_pX = recalculate_pX(state.nSOL, pSOL_current, state.nF, state.pF, state.nX)
@@ -74,9 +73,8 @@ class Simulation:
             for action, amount in actions:
                 state = self.handle_action(state, action, amount, pSOL_current)
 
-            state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod1, pSOL_current)
+            state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod1)
             if stability_pool_changed:
-                print(day)
                 stability_pool_non_zero_count += 1
 
             day_data = {

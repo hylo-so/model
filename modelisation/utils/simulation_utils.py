@@ -30,14 +30,11 @@ def adjust_fSOL_to_target_CR(nF, nX, pX, pF, stab_mod1):
     fSOL_adjustment = nF_required - nF
     return fSOL_adjustment if fSOL_adjustment <= 0 else 0
 
-
-def use_stability_pool(nF, fSOL_staked_per, stab_mod1, nX, pX, pF, pSOL_current):
+def use_stability_pool(nF, fSOL_staked_per, stab_mod1, nX, pX, pF):
     fSOL_adjustment = adjust_fSOL_to_target_CR(nF, nX, pX, pF, stab_mod1)
     if fSOL_adjustment < 0:
         max_fSOL_to_burn = nF * fSOL_staked_per
         fSOL_to_burn = -min(-fSOL_adjustment, max_fSOL_to_burn)
-        xSOL_to_mint = -fSOL_to_burn / pSOL_current / 2 / pX / pSOL_current
-        print (xSOL_to_mint)
         if fSOL_to_burn != 0:
-            return fSOL_to_burn, xSOL_to_mint, True
-    return 0, 0, False
+            return fSOL_to_burn, True
+    return 0, False

@@ -4,7 +4,7 @@ from hyloModelisation import Simulation
 
 sim = Simulation()
 
-np.random.seed(542)
+#np.random.seed(542)
 
 #np.random.seed(5422)
 
@@ -16,8 +16,8 @@ file_path = '../Solana Historical Data.csv'
 T = 1000 # Number of day in each montecarlo simulation
 N = 1 # Number of simulation created
 beta = 1.0 # Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
-stab_mod1 = 1.2 # Stability mode 1 collaterization ratio threshold, usage of stability pool
-stab_mod2 = 1.4 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
+stab_mod1 = 1.1 # Stability mode 1 collaterization ratio threshold, usage of stability pool
+stab_mod2 = 1.1 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable
 VaR_confidence_level = 0.999
 num_runs_per_path = 1  # Define how many times to run the simulation per price path
 
