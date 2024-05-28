@@ -1,9 +1,12 @@
 def adjust_SOL_reserve(nSOL, amount_in_dollars, pSOL_current):
     SOL_change = amount_in_dollars / pSOL_current
+    print(pSOL_current)
     return nSOL + SOL_change
 
 def mint_fSOL(nF, nSOL, amount, pF, pSOL_current):
+    print(nF)
     nF += amount
+    print(nF, amount, pSOL_current)
     amount_in_dollars = amount * pF
     nSOL = adjust_SOL_reserve(nSOL, amount_in_dollars, pSOL_current)
     return nF, nSOL
