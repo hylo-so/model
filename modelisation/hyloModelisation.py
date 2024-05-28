@@ -63,19 +63,19 @@ class Simulation:
         
    
 
-    def run_simulation(self, simulated_prices, stab_mod1, stab_mod2, stab_mod3):
+    def run_simulation(self, simulated_prices, stab_mod_fSOL_SOL, stab_mod_fee_control, stab_mod_fSOL_xSOL):
         daily_data = []
         self.pSOL = simulated_prices[0]
         state = self.initialize_simulation(self.amount_SOL_initial,self.pSOL)
-        stability_pool_non_zero_count = 0
-        stability_pool_2_non_zero_count = 0
+        stability_pool_fSOL_SOL_non_zero_count = 0
+        stability_pool_fSOL_xSOL_non_zero_count = 0
         xSOL_negative_price_count = 0
         
 
         for day, pSOL_current in enumerate(simulated_prices):
             state = self.handle_action(state, Action.UpdateMarketPrices, 0, pSOL_current)
             collateral_ratio = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
-            probabilities = get_action_probabilities(collateral_ratio, stab_mod2)
+            probabilities = get_action_probabilities(collateral_ratio, stab_mod_fee_control)
             amount_to_mint_per = get_mint_amount(collateral_ratio, self.config)
 
             actions = [
@@ -92,7 +92,8 @@ class Simulation:
             pre_nX = state.nX
             pre_pX = state.pX
 
-            state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod1, pSOL_current)
+            state, stability_pool_fSOL_xSOL_changed = self.handle_action(state, Action.StabilityPool2Adjustment, stab_mod_fSOL_xSOL, pSOL_current) #fSOL redeemed to xSOL pool
+
 
             #Used for tracking between each step
             pre_nSOL1 = state.nSOL
@@ -101,10 +102,8 @@ class Simulation:
             pre_pX1 = state.pX
 
             collateral_ratio_post_1 = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
-
-            state, stability_pool_2_changed = self.handle_action(state, Action.StabilityPool2Adjustment, stab_mod3, pSOL_current)
-            if stability_pool_changed:
-                stability_pool_non_zero_count += 1
+            
+            state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod_fSOL_SOL, pSOL_current) #fSOL redeemed to SOL pool
 
             #Used for tracking between each step
             pre_nSOL2 = state.nSOL
@@ -114,8 +113,11 @@ class Simulation:
             
             collateral_ratio_post_2 = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
 
-            if stability_pool_2_changed:
-                stability_pool_2_non_zero_count+= 1
+            if stability_pool_changed:
+                stability_pool_fSOL_SOL_non_zero_count += 1
+
+            if stability_pool_fSOL_xSOL_changed:
+                stability_pool_fSOL_xSOL_non_zero_count+= 1
 
             day_data = {
                 "day": day,
@@ -156,4 +158,4 @@ class Simulation:
         results_csv_path = './simulation_results.csv'
         results_df.to_csv(results_csv_path, index=False)
 
-        return stability_pool_non_zero_count, xSOL_negative_price_count, collateral_ratio, stability_pool_2_non_zero_count
+        return stability_pool_fSOL_SOL_non_zero_count, xSOL_negative_price_count, collateral_ratio, stability_pool_fSOL_xSOL_non_zero_count
