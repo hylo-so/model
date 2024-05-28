@@ -85,7 +85,8 @@ class Simulation:
 
             for action, amount in actions:
                 state = self.handle_action(state, action, amount, pSOL_current)
-                
+
+            #Used for tracking between each step            
             pre_nSOL = state.nSOL
             pre_nF = state.nF
             pre_nX = state.nX
@@ -93,6 +94,7 @@ class Simulation:
 
             state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod1, pSOL_current)
 
+            #Used for tracking between each step
             pre_nSOL1 = state.nSOL
             pre_nF1 = state.nF
             pre_nX1 = state.nX
@@ -104,6 +106,7 @@ class Simulation:
             if stability_pool_changed:
                 stability_pool_non_zero_count += 1
 
+            #Used for tracking between each step
             pre_nSOL2 = state.nSOL
             pre_nF2 = state.nF
             pre_nX2 = state.nX
