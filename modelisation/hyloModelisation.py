@@ -51,11 +51,11 @@ class Simulation:
             new_nF, new_nSOL = mint_fSOL(state.nF, state.nSOL, adjustment, state.pF, pSOL_current)
             return state._replace(nF=new_nF, nSOL=new_nSOL), changed
         
-        #elif action == Action.StabilityPool2Adjustment:
-        #    adjustment_nF, adjustment_nX, changed = use_stability_pool_2(state.nSOL, state.nF, self.fSOL_staked_per_2, amount, state.nX, state.pX, state.pF, pSOL_current)
-        #    new_nF, new_nSOL_1 = mint_fSOL(state.nF, state.nSOL, adjustment_nF, state.pF, pSOL_current)
-        #    new_nX, new_nSOL_2 = mint_xSOL(state.nX, new_nSOL_1, adjustment_nX, state.pX, pSOL_current)
-         #   return state._replace(nF=new_nF, nX=new_nX, nSOL=new_nSOL_2), changed   
+        elif action == Action.StabilityPool2Adjustment:
+            adjustment_nF, adjustment_nX, changed = use_stability_pool_2(state.nSOL, state.nF, self.fSOL_staked_per_2, amount, state.nX, state.pX, state.pF, pSOL_current)
+            new_nF, new_nSOL_1 = mint_fSOL(state.nF, state.nSOL, adjustment_nF, state.pF, pSOL_current)
+            new_nX, new_nSOL_2 = mint_xSOL(state.nX, new_nSOL_1, adjustment_nX, state.pX, pSOL_current)
+            return state._replace(nF=new_nF, nX=new_nX, nSOL=new_nSOL_2), changed   
                   
         elif action == Action.UpdateMarketPrices:
             new_pX = recalculate_pX(state.nSOL, pSOL_current, state.nF, state.pF, state.nX)
@@ -85,36 +85,61 @@ class Simulation:
 
             for action, amount in actions:
                 state = self.handle_action(state, action, amount, pSOL_current)
+                
             pre_nSOL = state.nSOL
             pre_nF = state.nF
             pre_nX = state.nX
             pre_pX = state.pX
+
             state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod1, pSOL_current)
-            #state, stability_pool_2_changed = self.handle_action(state, Action.StabilityPool2Adjustment, stab_mod3, pSOL_current)
+
+            pre_nSOL1 = state.nSOL
+            pre_nF1 = state.nF
+            pre_nX1 = state.nX
+            pre_pX1 = state.pX
+
+            collateral_ratio_post_1 = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
+
+            state, stability_pool_2_changed = self.handle_action(state, Action.StabilityPool2Adjustment, stab_mod3, pSOL_current)
             if stability_pool_changed:
                 stability_pool_non_zero_count += 1
-            
-            collateral_ratio_post = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
 
-            #if stability_pool_2_changed:
-            #    stability_pool_2_non_zero_count+= 1
+            pre_nSOL2 = state.nSOL
+            pre_nF2 = state.nF
+            pre_nX2 = state.nX
+            pre_pX2 = state.pX
+            
+            collateral_ratio_post_2 = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
+
+            if stability_pool_2_changed:
+                stability_pool_2_non_zero_count+= 1
 
             day_data = {
                 "day": day,
                 "pSOL": pSOL_current,
+                "pre_nSOL1": pre_nSOL1,
                 "pre_nSOL": pre_nSOL,
                 "nSOL": state.nSOL,
                 "pre_nF": pre_nF,
+                "pre_nF1": pre_nF1,
                 "pF": state.pF,
                 "nF": state.nF,
                 "pre_pX": pre_pX,
+                "pre_pX1": pre_pX1,
                 "pX": state.pX,
                 "pre_nX": pre_nX,
+                "pre_nX1": pre_nX1,
                 "nX": state.nX,
-                "Marketcap fSOL": state.pF * state.nF,
-                "Marketcap xSOL": state.pX * state.nX,
+                #"Marketcap fSOL": state.pF * state.nF,
+                #"Marketcap xSOL": state.pX * state.nX,
                 "Collateralization ratio": collateral_ratio,
-                "Collateralization ratio Post": collateral_ratio_post
+                "Collateralization ratio Post Stab1": collateral_ratio_post_1,
+                "Collateralization ratio Post Stab2": collateral_ratio_post_2,
+                "Stab1 usage nSOL removed": pre_nSOL - pre_nSOL1,
+                "Stab1 usage nF burned": pre_nF - pre_nF1,
+                "Stab2 usage nSOL moved": pre_nSOL1 - pre_nSOL2,
+                "Stab2 usage nF burned": pre_nF1 - pre_nF2,
+                "Stab2 usage nX minted": pre_nX2 - pre_nX1 
             }
             daily_data.append(day_data)
 
