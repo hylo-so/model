@@ -76,7 +76,9 @@ class Simulation:
         self.pSOL = simulated_prices[0]
         state = self.initialize_simulation(self.amount_SOL_initial, self.pSOL)
         stability_pool_fSOL_SOL_non_zero_count = 0
+        stability_pool_fSOL_SOL_usage = 0
         stability_pool_fSOL_xSOL_non_zero_count = 0
+        stability_pool_fSOL_xSOL_non_usage = 0
         xSOL_negative_price_count = 0
         print('xsol', stab_mod_fSOL_xSOL, 'sol', stab_mod_fSOL_SOL)
 
@@ -95,64 +97,64 @@ class Simulation:
                 state, _ = self.handle_action(state, action, amount, pSOL_current)
 
             #Used for tracking between each step, pre usage of stability pool fSOL_xSOL 
-            pre_nSOL = state.nSOL
-            pre_nF = state.nF
-            pre_nX = state.nX
-            pre_pX = state.pX
+            pre_fSOL_xSOL_nSOL = state.nSOL
+            pre_fSOL_xSOL_nF = state.nF
+            pre_fSOL_xSOL_nX = state.nX
+            pre_fSOL_xSOL_pX = state.pX
 
             state, stability_pool_fSOL_xSOL_changed = self.handle_action(state, Action.StabilityPool2Adjustment, stab_mod_fSOL_xSOL, pSOL_current)
 
-            #Used for tracking between each step, post usage of stability pool fSOL_xSOL
-            pre_nSOL1 = state.nSOL
-            pre_nF1 = state.nF
-            pre_nX1 = state.nX
-            pre_pX1 = state.pX
+            #Used for tracking between each step, pre usage of stability pool fSOL_SOL
+            pre_fSOL_SOL_nSOL = state.nSOL
+            pre_fSOL_SOL_nF = state.nF
+            pre_fSOL_SOL_nX = state.nX
+            pre_fSOL_SOL_pX = state.pX
 
             collateral_ratio_post_1 = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
             
-            state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod_fSOL_SOL, pSOL_current)
+            state, stability_pool_fSOL_SOL_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod_fSOL_SOL, pSOL_current)
 
-            #Used for tracking between each step, post usage of stability pool fSOL_SOL
-            pre_nSOL2 = state.nSOL
-            pre_nF2 = state.nF
-            pre_nX2 = state.nX
-            pre_pX2 = state.pX
             
             collateral_ratio_post_2 = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
 
-            if stability_pool_changed:
-                stability_pool_fSOL_SOL_non_zero_count += 1
+            stability_pool_fSOL_xSOL_usage_nF_redeemed = pre_fSOL_xSOL_nF - pre_fSOL_SOL_nF
+            stability_pool_fSOL_SOL_usage_nF_redeemed = pre_fSOL_SOL_nF - state.nF
 
             if stability_pool_fSOL_xSOL_changed:
                 stability_pool_fSOL_xSOL_non_zero_count += 1
+                stability_pool_fSOL_xSOL_non_usage += stability_pool_fSOL_xSOL_usage_nF_redeemed
+
+            if stability_pool_fSOL_SOL_changed:
+                stability_pool_fSOL_SOL_non_zero_count += 1
+                stability_pool_fSOL_SOL_usage += stability_pool_fSOL_SOL_usage_nF_redeemed
 
             day_data = {
                 "day": day,
                 "pSOL": pSOL_current,
-                "pre_nSOL1": pre_nSOL1,
-                "pre_nSOL": pre_nSOL,
+                "pre_nSOL1": pre_fSOL_SOL_nSOL,
+                "pre_nSOL": pre_fSOL_xSOL_nSOL,
                 "nSOL": state.nSOL,
-                "pre_nF": pre_nF,
-                "pre_nF1": pre_nF1,
+                "pre_nF": pre_fSOL_xSOL_nF,
+                "pre_nF1": pre_fSOL_SOL_nF,
                 "pF": state.pF,
                 "nF": state.nF,
-                "pre_pX": pre_pX,
-                "pre_pX1": pre_pX1,
+                "pre_pX": pre_fSOL_xSOL_pX,
+                "pre_pX1": pre_fSOL_SOL_nX,
                 "pX": state.pX,
-                "pre_nX": pre_nX,
-                "pre_nX1": pre_nX1,
+                "pre_nX": pre_fSOL_xSOL_nX,
+                "pre_nX1": pre_fSOL_SOL_pX,
                 "nX": state.nX,
                 "Marketcap fSOL": state.pF * state.nF,
                 "Marketcap xSOL": state.pX * state.nX,
                 "Collateralization ratio": collateral_ratio,
                 "Collateralization ratio Post Stab1": collateral_ratio_post_1,
                 "Collateralization ratio Post Stab2": collateral_ratio_post_2,
-                "Stab1 nSOL removed": pre_nSOL - pre_nSOL1,
-                "Stab1 nF burned": pre_nF - pre_nF1,
-                "Stab1 nX minted": pre_nX1 - pre_nX,
-                "Stab2 nSOL moved": pre_nSOL1 - pre_nSOL2,
-                "Stab2 nF burned": pre_nF1 - pre_nF2,
-                "Stab2 nX minted": pre_nX2 - pre_nX1 
+                "Stab1 nSOL removed": pre_fSOL_xSOL_nSOL - pre_fSOL_SOL_nSOL,
+                "Stab1 nF burned": stability_pool_fSOL_xSOL_usage_nF_redeemed,
+                "Stab1 nX minted": pre_fSOL_SOL_nX - pre_fSOL_xSOL_nX,
+                "Stab2 nSOL moved": pre_fSOL_SOL_nSOL - state.nSOL,
+                "Stab2 nF burned": stability_pool_fSOL_SOL_usage_nF_redeemed,
+                "Stab2 nX minted": state.nX - pre_fSOL_SOL_nX 
             }
             daily_data.append(day_data)
 
@@ -164,4 +166,4 @@ class Simulation:
         results_csv_path = './simulation_results.csv'
         results_df.to_csv(results_csv_path, index=False)
 
-        return stability_pool_fSOL_SOL_non_zero_count, xSOL_negative_price_count, collateral_ratio, stability_pool_fSOL_xSOL_non_zero_count
+        return stability_pool_fSOL_SOL_non_zero_count, xSOL_negative_price_count, collateral_ratio, stability_pool_fSOL_xSOL_non_zero_count, stability_pool_fSOL_xSOL_non_usage, stability_pool_fSOL_SOL_non_zero_count

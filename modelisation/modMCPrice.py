@@ -42,8 +42,12 @@ for path_index, path in enumerate(price_paths.T):  # Transpose to iterate over e
     print(f"Completed simulations for path {path_index + 1}/{price_paths.shape[1]}")
 
 # Initialize counters for aggregation
-total_stability_pool_fSOL_SOL_non_zero = 0
 total_stability_pool_fSOL_xSOL_non_zero = 0
+total_stability_pool_fSOL_SOL_non_zero = 0
+
+total_stability_pool_fSOL_xSOL_nF_redeem = 0
+total_stability_pool_fSOL_SOL_nF_redeem = 0
+
 total_xSOL_negative_price = 0
 total_runs = 0
 
@@ -54,11 +58,19 @@ for path_results in all_runs_results:
         total_xSOL_negative_price += result[1]
         avg_collateral_ratio = result[2]/ num_runs_per_path
         total_stability_pool_fSOL_xSOL_non_zero += result[3]
+        total_stability_pool_fSOL_xSOL_nF_redeem += result[4]
+        total_stability_pool_fSOL_SOL_nF_redeem += result[5]
+
     total_runs += len(path_results)
 
 # Calculate averages
-average_stability_pool_fSOL_SOL_non_zero = total_stability_pool_fSOL_SOL_non_zero / total_runs / T *100
 average_stability_pool_fSOL_xSOL_non_zero = total_stability_pool_fSOL_xSOL_non_zero / total_runs / T *100
+average_stability_pool_fSOL_SOL_non_zero = total_stability_pool_fSOL_SOL_non_zero / total_runs / T *100
+
+average_stability_pool_fSOL_xSOL_nF_redeem = total_stability_pool_fSOL_xSOL_nF_redeem / total_runs
+average_stability_pool_fSOL_SOL_nF_redeem = total_stability_pool_fSOL_SOL_nF_redeem / total_runs
+average_stability_pools_nF_redeem = average_stability_pool_fSOL_xSOL_nF_redeem + average_stability_pool_fSOL_SOL_nF_redeem
+
 average_xSOL_negative_price = total_xSOL_negative_price / total_runs / T * 100
 average_xSOL_negative_price_run = (total_xSOL_negative_price / total_runs) * 100
 
@@ -66,4 +78,7 @@ print(f"Average times stability pool fSOL SOL returned non-zero: {average_stabil
 print(f"Average times stability pool fSOL xSOL returned non-zero: {average_stability_pool_fSOL_xSOL_non_zero}%")
 print(f"Percentage of runs experiencing collateralization failure: {average_xSOL_negative_price_run}%")
 print(f"Average percentage of days with a negative xSOL price across all simulations: {average_xSOL_negative_price}%")
+print(f"Average number of fSOL redeem from fSOL_xSOL stability pool per run: {average_stability_pool_fSOL_xSOL_nF_redeem}")
+print(f"Average number of fSOL redeem from fSOL_SOL stability pool per run: {average_stability_pool_fSOL_SOL_nF_redeem}")
+print(f"Average number of fSOL redeem from both stability pool per run: {average_stability_pools_nF_redeem}")
 #print (f"VaR with confidence level of {VaR_confidence_level}:", var_percentile,"%")
