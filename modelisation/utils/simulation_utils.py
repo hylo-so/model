@@ -116,4 +116,3 @@ def use_stability_pool_2(
             return -fSOL_to_burn, xSOL_to_mint, True
     return 0, 0, False
 
-print(use_stability_pool_2(118.3, 1989.9, 0.2, 1.3, 10411.7, 0.05459, 1, 21.67))

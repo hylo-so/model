@@ -16,9 +16,9 @@ file_path = '../Solana Historical Data.csv'
 T = 1000 # Number of day in each montecarlo simulation
 N = 1 # Number of simulation created
 beta = 1.0 # Beta inferior to 1 reflect lower volatility and superior to 1 it reflect higher volatility
-stab_mod_fSOL_SOL = 1.3# Stability mode 1 collaterization ratio threshold, usage of stability pool  
+stab_mod_fSOL_SOL = 1.2# Stability mode 1 collaterization ratio threshold, usage of stability pool  
 stab_mod_fee_control = 1.5 # Stability mode 2 collaterization ratio threshold, mint of fSOL disable  stab_mod_fee_control
-stab_mod_fSOL_xSOL = 1.2 # Stability mode 3 collaterization ratio threshold, usage of stability pool 2
+stab_mod_fSOL_xSOL = 1.3 # Stability mode 3 collaterization ratio threshold, usage of stability pool 2
 VaR_confidence_level = 0.999
 num_runs_per_path = 1  # Define how many times to run the simulation per price path
 
