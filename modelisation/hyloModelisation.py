@@ -70,6 +70,7 @@ class Simulation:
         stability_pool_fSOL_SOL_non_zero_count = 0
         stability_pool_fSOL_xSOL_non_zero_count = 0
         xSOL_negative_price_count = 0
+        print('xsol', stab_mod_fSOL_xSOL,'sol',stab_mod_fSOL_SOL)
         
 
         for day, pSOL_current in enumerate(simulated_prices):
@@ -95,7 +96,7 @@ class Simulation:
             state, stability_pool_fSOL_xSOL_changed = self.handle_action(state, Action.StabilityPool2Adjustment, stab_mod_fSOL_xSOL, pSOL_current) #fSOL redeemed to xSOL pool
 
 
-            #Used for tracking between each step
+            #Used for tracking between each step, post usage of stability pool fSOL_xSOL
             pre_nSOL1 = state.nSOL
             pre_nF1 = state.nF
             pre_nX1 = state.nX
@@ -105,7 +106,7 @@ class Simulation:
             
             state, stability_pool_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod_fSOL_SOL, pSOL_current) #fSOL redeemed to SOL pool
 
-            #Used for tracking between each step
+            #Used for tracking between each step, post usage of stability pool fSOL_SOL
             pre_nSOL2 = state.nSOL
             pre_nF2 = state.nF
             pre_nX2 = state.nX
@@ -140,18 +141,19 @@ class Simulation:
                 "Collateralization ratio": collateral_ratio,
                 "Collateralization ratio Post Stab1": collateral_ratio_post_1,
                 "Collateralization ratio Post Stab2": collateral_ratio_post_2,
-                "Stab1 usage nSOL removed": pre_nSOL - pre_nSOL1,
-                "Stab1 usage nF burned": pre_nF - pre_nF1,
-                "Stab2 usage nSOL moved": pre_nSOL1 - pre_nSOL2,
-                "Stab2 usage nF burned": pre_nF1 - pre_nF2,
-                "Stab2 usage nX minted": pre_nX2 - pre_nX1 
+                "Stab1 nSOL removed": pre_nSOL - pre_nSOL1,
+                "Stab1 nF burned": pre_nF - pre_nF1,
+                "Stab1 nX minted": pre_nX1 - pre_nX,                
+                "Stab2 nSOL moved": pre_nSOL1 - pre_nSOL2,
+                "Stab2 nF burned": pre_nF1 - pre_nF2,
+                "Stab2 nX minted": pre_nX2 - pre_nX1 
             }
             daily_data.append(day_data)
 
 
-            if state.pX * state.nX < 0:
+            if collateral_ratio < 1:
                 xSOL_negative_price_count += 1
-            if state.pX < 0:
+            if collateral_ratio < 1:
                 break
 
         results_df = pd.DataFrame(daily_data)
