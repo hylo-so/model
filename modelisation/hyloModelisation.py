@@ -65,13 +65,16 @@ class Simulation:
         elif action == Action.StabilityPoolAdjustment:
             adjustment, changed = use_stability_pool(state.nF, state.stab_nF, amount, state.nX, state.pX, state.pF)
             new_nF, new_nSOL = mint_fSOL(state.nF, state.nSOL, adjustment, state.pF, pSOL_current)
-            return state._replace(nF=new_nF, nSOL=new_nSOL), changed
+            new_stab_nF = state.stab_nF - (state.nF - new_nF)
+
+            return state._replace(nF=new_nF, nSOL=new_nSOL, stab_nF=new_stab_nF), changed
         
         elif action == Action.StabilityPool2Adjustment:
             adjustment_nF, adjustment_nX, changed = use_stability_pool_2(state.nSOL, state.nF, state.stab2_nF, amount, state.nX, state.pX, state.pF, pSOL_current)
             new_nF, new_nSOL_1 = mint_fSOL(state.nF, state.nSOL, adjustment_nF, state.pF, pSOL_current)
             new_nX, new_nSOL_2 = mint_xSOL(state.nX, new_nSOL_1, adjustment_nX, state.pX, pSOL_current)
-            return state._replace(nF=new_nF, nX=new_nX, nSOL=new_nSOL_2), changed
+            new_stab2_nF = state.stab2_nF - (state.nF - new_nF)
+            return state._replace(nF=new_nF, nX=new_nX, nSOL=new_nSOL_2, stab2_nF=new_stab2_nF), changed
         
         elif action == Action.UpdateMarketPrices:
             new_pX = recalculate_pX(state.nSOL, pSOL_current, state.nF, state.pF, state.nX)
@@ -79,7 +82,7 @@ class Simulation:
         
         elif action == Action.UpdatefSOLInStabilityPool:
             new_stab_nF = update_fSOL_in_stability_pool(state.stab_nF, state.nF, self.min_recovery_per, self.max_recovery_per, self.fSOL_staked_per)
-            new_stab2_nF = update_fSOL_in_stability_pool(state.stab_nF, state.nF, self.min_recovery_per_2, self.max_recovery_per_2, self.fSOL_staked_per_2)
+            new_stab2_nF = update_fSOL_in_stability_pool(state.stab2_nF, state.nF, self.min_recovery_per_2, self.max_recovery_per_2, self.fSOL_staked_per_2)
             return state._replace(stab_nF=new_stab_nF, stab2_nF=new_stab2_nF), False
 
 
@@ -120,8 +123,8 @@ class Simulation:
 
             state, _ = self.handle_action(state, Action.UpdatefSOLInStabilityPool, None , pSOL_current)
 
-            stab_nF = state.stab_nF
-            stab2_nF = state.stab2_nF
+            post_stab_nF = state.stab_nF
+            post_stab2_nF = state.stab2_nF
             
 
             #Used for tracking between each step, pre usage of stability pool fSOL_xSOL 
@@ -184,8 +187,10 @@ class Simulation:
                 "Stab2 nF burned": stability_pool_fSOL_SOL_usage_nF_redeemed,
                 "Stab2 nX minted": state.nX - pre_fSOL_SOL_nX,
                 "pre_stab_nF": pre_stab_nF,
+                "post_stab_nF": post_stab_nF,
                 "stab_nF": state.stab_nF,
                 "pre_stab2_nF": pre_stab2_nF,
+                "post_stab2_nF": post_stab2_nF,
                 "stab2_nF": state.stab2_nF,
                 "empty": None
             }

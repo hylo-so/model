@@ -73,9 +73,9 @@ def update_fSOL_in_stability_pool(
     max_recovery_per: float, 
     fSOL_max_staked_per: float
 ) -> float:
-    recovery_amount = nF * (np.random.uniform(min_recovery_per, max_recovery_per) / 100)
+    recovery_amount = nF * np.random.uniform(min_recovery_per, max_recovery_per)
     stab_nF += recovery_amount
-    cap_amount = nF * (fSOL_max_staked_per / 100)
+    cap_amount = nF * fSOL_max_staked_per
     if stab_nF > cap_amount:
         stab_nF = cap_amount
     return stab_nF
