@@ -1,40 +1,76 @@
-def adjust_SOL_reserve(nSOL, amount_in_dollars, pSOL_current):
+def adjust_SOL_reserve(
+    nSOL: float, 
+    amount_in_dollars: float, 
+    pSOL_current: float
+) -> float:
     SOL_change = amount_in_dollars / pSOL_current
-    #print(pSOL_current)
     return nSOL + SOL_change
 
-def mint_fSOL(nF, nSOL, amount, pF, pSOL_current):
-    #print(nF)
+def mint_fSOL(
+    nF: float, 
+    nSOL: float, 
+    amount: float, 
+    pF: float, 
+    pSOL_current: float
+) -> tuple[float, float]:
     nF += amount
-    #print(nF, amount, pSOL_current)
     amount_in_dollars = amount * pF
     nSOL = adjust_SOL_reserve(nSOL, amount_in_dollars, pSOL_current)
     return nF, nSOL
 
-def mint_xSOL(nX, nSOL, amount, pX, pSOL_current):
+def mint_xSOL(
+    nX: float, 
+    nSOL: float, 
+    amount: float, 
+    pX: float, 
+    pSOL_current: float
+) -> tuple[float, float]:
     nX += amount
     amount_in_dollars = amount * pX
     nSOL = adjust_SOL_reserve(nSOL, amount_in_dollars, pSOL_current)
     return nX, nSOL
 
-def recalculate_pX(nSOL, pSOL_current, nF, pF, nX):
+def recalculate_pX(
+    nSOL: float, 
+    pSOL_current: float, 
+    nF: float, 
+    pF: float, 
+    nX: float
+) -> float:
     total_value_current = nSOL * pSOL_current
     pX = (total_value_current - (nF * pF)) / nX
     return pX
 
-def calculate_collateral_ratio(nSOL, pSOL, nF, pF):
+def calculate_collateral_ratio(
+    nSOL: float, 
+    pSOL: float, 
+    nF: float, 
+    pF: float
+) -> float:
     total_SOL_value = nSOL * pSOL
     market_cap_fSOL = nF * pF
     collateralization_ratio_fSOL = total_SOL_value / market_cap_fSOL
     return collateralization_ratio_fSOL
 
-def adjust_fSOL_to_target_CR(nF, nX, pX, pF, stab_mod1):
+def adjust_fSOL_to_target_CR(
+    nF: float, 
+    nX: float, 
+    pX: float, 
+    pF: float, 
+    stab_mod1: float
+) -> float:
     nF_required = (nX * pX) / (pF * (stab_mod1 - 1))
     fSOL_adjustment = nF_required - nF
     return fSOL_adjustment if fSOL_adjustment <= 0 else 0
 
-
-def use_stability_pool(nF, fSOL_staked_per, stab_mod1, nX, pX, pF):
+def use_stability_pool(
+    nF: float, 
+    fSOL_staked_per: float, 
+    stab_mod1: float, 
+    nX: float, 
+    pX: float, 
+    pF: float
+) -> tuple[float, bool]:
     fSOL_adjustment = adjust_fSOL_to_target_CR(nF, nX, pX, pF, stab_mod1)
     if fSOL_adjustment < 0:
         max_fSOL_to_burn = nF * fSOL_staked_per
@@ -43,9 +79,17 @@ def use_stability_pool(nF, fSOL_staked_per, stab_mod1, nX, pX, pF):
             return fSOL_to_burn, True
     return 0, False
 
-def adjust_fSOL_to_target_CR_2(nF, nX, nSOL, pX, pF, pSOL, stab_mod2):
+def adjust_fSOL_to_target_CR_2(
+    nF: float, 
+    nX: float, 
+    nSOL: float, 
+    pX: float, 
+    pF: float, 
+    pSOL: float, 
+    stab_mod2: float
+) -> tuple[float, float, float]:
     fSOL_SOL_mcap = nF * pF / pSOL  # Total fSOL market cap in SOL
-    xSOL_SOL_mcap = nSOL-fSOL_SOL_mcap
+    xSOL_SOL_mcap = nSOL - fSOL_SOL_mcap
     target_SOL = nSOL / stab_mod2
     SOL_moved = fSOL_SOL_mcap - target_SOL
     if SOL_moved > 0:
@@ -53,7 +97,16 @@ def adjust_fSOL_to_target_CR_2(nF, nX, nSOL, pX, pF, pSOL, stab_mod2):
         return fSOL_burned, xSOL_SOL_mcap, SOL_moved
     return 0, 0, 0
 
-def use_stability_pool_2(nSOL, nF, fSOL_staked_per_2, stab_mod2, nX, pX, pF, pSOL_current):
+def use_stability_pool_2(
+    nSOL: float, 
+    nF: float, 
+    fSOL_staked_per_2: float, 
+    stab_mod2: float, 
+    nX: float, 
+    pX: float, 
+    pF: float, 
+    pSOL_current: float
+) -> tuple[float, float, bool]:
     fSOL_burned, xSOL_SOL_mcap, SOL_moved = adjust_fSOL_to_target_CR_2(nF, nX, nSOL, pX, pF, pSOL_current, stab_mod2)
     if fSOL_burned > 0:
         max_fSOL_to_burn = nF * fSOL_staked_per_2
