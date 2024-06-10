@@ -129,8 +129,9 @@ def use_stability_pool_2(
     if fSOL_burned > 0:
         max_fSOL_to_burn = stab2_nF
         fSOL_to_burn = min(fSOL_burned, max_fSOL_to_burn)
-        xSOL_to_mint = SOL_moved / (xSOL_SOL_mcap / nX) 
-        if fSOL_to_burn != 0:
+        SOL_moved_2 = fSOL_to_burn * (pF / pSOL_current)
+        xSOL_to_mint = SOL_moved_2 / (xSOL_SOL_mcap / nX) 
+        if fSOL_to_burn > 0:
             return -fSOL_to_burn, xSOL_to_mint, True
     return 0, 0, False
 

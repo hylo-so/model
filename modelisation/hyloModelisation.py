@@ -50,7 +50,9 @@ class Simulation:
         state: SimulationState, 
         action: Action, 
         amount: float, 
-        pSOL_current: float = None
+        pSOL_current: float = None,
+        stab_mod_fSOL_xSOL: float = None, 
+        stab_mod_fSOL_SOL: float = None       
     ) -> Tuple[SimulationState, bool]:
         if action in [Action.MintFSOL, Action.BurnFSOL]:
             sign = 1 if action == Action.MintFSOL else -1
@@ -81,8 +83,14 @@ class Simulation:
             return state._replace(pX=new_pX), False
         
         elif action == Action.UpdatefSOLInStabilityPool:
-            new_stab_nF = update_fSOL_in_stability_pool(state.stab_nF, state.nF, self.min_recovery_per, self.max_recovery_per, self.fSOL_staked_per)
-            new_stab2_nF = update_fSOL_in_stability_pool(state.stab2_nF, state.nF, self.min_recovery_per_2, self.max_recovery_per_2, self.fSOL_staked_per_2)
+            if amount > stab_mod_fSOL_SOL:
+                new_stab_nF = update_fSOL_in_stability_pool(state.stab_nF, state.nF, self.min_recovery_per, self.max_recovery_per, self.fSOL_staked_per)
+            else:
+                new_stab_nF = state.stab_nF
+            if amount > stab_mod_fSOL_xSOL:
+                new_stab2_nF = update_fSOL_in_stability_pool(state.stab2_nF, state.nF, self.min_recovery_per_2, self.max_recovery_per_2, self.fSOL_staked_per_2)
+            else:
+                new_stab2_nF = state.stab2_nF
             return state._replace(stab_nF=new_stab_nF, stab2_nF=new_stab2_nF), False
 
 
@@ -121,7 +129,7 @@ class Simulation:
             pre_stab_nF = state.stab_nF
             pre_stab2_nF = state.stab2_nF
 
-            state, _ = self.handle_action(state, Action.UpdatefSOLInStabilityPool, None , pSOL_current)
+            state, _ = self.handle_action(state, Action.UpdatefSOLInStabilityPool, collateral_ratio , pSOL_current, stab_mod_fSOL_xSOL, stab_mod_fSOL_SOL)
 
             post_stab_nF = state.stab_nF
             post_stab2_nF = state.stab2_nF
@@ -132,6 +140,7 @@ class Simulation:
             pre_fSOL_xSOL_nF = state.nF
             pre_fSOL_xSOL_nX = state.nX
             pre_fSOL_xSOL_pX = state.pX
+
 
             state, stability_pool_fSOL_xSOL_changed = self.handle_action(state, Action.StabilityPool2Adjustment, stab_mod_fSOL_xSOL, pSOL_current)
 
@@ -145,7 +154,6 @@ class Simulation:
             
             state, stability_pool_fSOL_SOL_changed = self.handle_action(state, Action.StabilityPoolAdjustment, stab_mod_fSOL_SOL, pSOL_current)
 
-            
             collateral_ratio_post_2 = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
 
             stability_pool_fSOL_xSOL_usage_nF_redeemed = pre_fSOL_xSOL_nF - pre_fSOL_SOL_nF
@@ -204,4 +212,4 @@ class Simulation:
         results_csv_path = './simulation_results.csv'
         results_df.to_csv(results_csv_path, index=False)
 
-        return stability_pool_fSOL_SOL_non_zero_count, xSOL_negative_price_count, collateral_ratio, stability_pool_fSOL_xSOL_non_zero_count, stability_pool_fSOL_xSOL_non_usage, stability_pool_fSOL_SOL_non_zero_count
+        return stability_pool_fSOL_SOL_non_zero_count, xSOL_negative_price_count, collateral_ratio, stability_pool_fSOL_xSOL_non_zero_count, stability_pool_fSOL_xSOL_non_usage, stability_pool_fSOL_SOL_usage
