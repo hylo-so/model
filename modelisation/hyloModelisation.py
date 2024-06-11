@@ -112,7 +112,11 @@ class Simulation:
             "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
             "stabxSOL_nF": state.stabxSOL_nF
         }
-        state, stability_pool_fSOL_xSOL_changed = self.handle_action(state, Action.StabilityPoolxSOL, stab_mod_fSOL_xSOL, pSOL_current)
+        if collateral_ratio < stab_mod_fSOL_xSOL:
+            state, stability_pool_fSOL_xSOL_changed = self.handle_action(state, Action.StabilityPoolxSOL, stab_mod_fSOL_xSOL, pSOL_current)
+        else:
+            stability_pool_fSOL_xSOL_changed = False
+
         post_StabilityPoolxSOL_values = {
             "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
             "stabxSOL_nF": state.stabxSOL_nF
@@ -123,7 +127,11 @@ class Simulation:
             "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
             "stabSOL_nF": state.stabSOL_nF
         }
-        state, stability_pool_fSOL_SOL_changed = self.handle_action(state, Action.StabilityPoolSOL, stab_mod_fSOL_SOL, pSOL_current)
+        if collateral_ratio_post_stab_xSOL < stab_mod_fSOL_SOL:
+            state, stability_pool_fSOL_SOL_changed = self.handle_action(state, Action.StabilityPoolSOL, stab_mod_fSOL_SOL, pSOL_current)
+        else:
+            stability_pool_fSOL_SOL_changed = False
+
         post_StabilityPoolSOL_values = {
             "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
             "stabSOL_nF": state.stabSOL_nF
