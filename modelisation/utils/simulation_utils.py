@@ -81,7 +81,7 @@ def update_fSOL_in_stability_pool(
     return stab_nF
 
 
-def use_stability_pool(
+def use_stability_pool_fSOL(
     nF: float, 
     stab_nF: float, 
     stab_mod1: float, 
@@ -97,7 +97,7 @@ def use_stability_pool(
             return fSOL_to_burn, True
     return 0, False
 
-def adjust_fSOL_to_target_CR_2(
+def adjust_fSOL_to_target_CR_xSOL(
     nF: float, 
     nX: float, 
     nSOL: float, 
@@ -115,7 +115,7 @@ def adjust_fSOL_to_target_CR_2(
         return fSOL_burned, xSOL_SOL_mcap, SOL_moved
     return 0, 0, 0
 
-def use_stability_pool_2(
+def use_stability_pool_xSOL(
     nSOL: float, 
     nF: float, 
     stab2_nF: float, 
@@ -125,7 +125,7 @@ def use_stability_pool_2(
     pF: float, 
     pSOL_current: float
 ) -> tuple[float, float, bool]:
-    fSOL_burned, xSOL_SOL_mcap, SOL_moved = adjust_fSOL_to_target_CR_2(nF, nX, nSOL, pX, pF, pSOL_current, stab_mod2)
+    fSOL_burned, xSOL_SOL_mcap, SOL_moved = adjust_fSOL_to_target_CR_xSOL(nF, nX, nSOL, pX, pF, pSOL_current, stab_mod2)
     if fSOL_burned > 0:
         max_fSOL_to_burn = stab2_nF
         fSOL_to_burn = min(fSOL_burned, max_fSOL_to_burn)

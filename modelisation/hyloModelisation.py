@@ -3,7 +3,7 @@ import enum
 import pandas as pd
 import numpy as np
 import configparser
-from utils.simulation_utils import (mint_fSOL, mint_xSOL, recalculate_pX, calculate_collateral_ratio, use_stability_pool, use_stability_pool_2, update_fSOL_in_stability_pool)
+from utils.simulation_utils import (mint_fSOL, mint_xSOL, recalculate_pX, calculate_collateral_ratio, use_stability_pool_fSOL, use_stability_pool_xSOL, update_fSOL_in_stability_pool)
 from utils.event_distributions import (get_action_probabilities, get_mint_amount)
 from typing import Tuple, List
 
@@ -65,14 +65,14 @@ class Simulation:
             return state._replace(nX=new_nX, nSOL=new_nSOL), False
         
         elif action == Action.StabilityPoolSOL:
-            adjustment, changed = use_stability_pool(state.nF, state.stabSOL_nF, amount, state.nX, state.pX, state.pF)
+            adjustment, changed = use_stability_pool_fSOL(state.nF, state.stabSOL_nF, amount, state.nX, state.pX, state.pF)
             new_nF, new_nSOL = mint_fSOL(state.nF, state.nSOL, adjustment, state.pF, pSOL_current)
             new_stabSOL_nF = state.stabSOL_nF - (state.nF - new_nF)
 
             return state._replace(nF=new_nF, nSOL=new_nSOL, stabSOL_nF=new_stabSOL_nF), changed
         
         elif action == Action.StabilityPoolxSOL:
-            adjustment_nF, adjustment_nX, changed = use_stability_pool_2(state.nSOL, state.nF, state.stabxSOL_nF, amount, state.nX, state.pX, state.pF, pSOL_current)
+            adjustment_nF, adjustment_nX, changed = use_stability_pool_xSOL(state.nSOL, state.nF, state.stabxSOL_nF, amount, state.nX, state.pX, state.pF, pSOL_current)
             new_nF, new_nSOL_1 = mint_fSOL(state.nF, state.nSOL, adjustment_nF, state.pF, pSOL_current)
             new_nX, new_nSOL_2 = mint_xSOL(state.nX, new_nSOL_1, adjustment_nX, state.pX, pSOL_current)
             new_stabxSOL_nF = state.stabxSOL_nF - (state.nF - new_nF)
@@ -156,7 +156,6 @@ class Simulation:
         stability_pool_fSOL_xSOL_non_zero_count = 0
         stability_pool_fSOL_xSOL_non_usage = 0
         xSOL_negative_price_count = 0
-        print('xsol', stab_mod_fSOL_xSOL, 'sol', stab_mod_fSOL_SOL)
 
         for day, pSOL_current in enumerate(simulated_prices):
             state, _ = self.handle_action(state, Action.UpdateMarketPrices, 0, pSOL_current)
