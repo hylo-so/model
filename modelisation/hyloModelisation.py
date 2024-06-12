@@ -94,7 +94,7 @@ class Simulation:
             return state._replace(stabSOL_nF=new_stabSOL_nF, stabxSOL_nF=new_stabxSOL_nF), False
         
     
-    def update_stability_pools(self, state, pSOL_current, stab_mod_fSOL_xSOL, stab_mod_fSOL_SOL, collateral_ratio):
+    def update_stability_pools(self, state, pSOL_current: float, stab_mod_fSOL_xSOL: float, stab_mod_fSOL_SOL: float, collateral_ratio: float):
         pre_UpdatefSOLInStabilityPool_values = {
             "stabSOL_nF": state.stabSOL_nF,
             "stabxSOL_nF": state.stabxSOL_nF
