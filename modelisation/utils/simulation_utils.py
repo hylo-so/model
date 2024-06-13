@@ -157,7 +157,7 @@ def adjust_fSOL_to_target_CR(
         nX (float): The current amount of xSOL.
         pX (float): The price of xSOL.
         pF (float): The price of fSOL.
-        stab_mod1 (float): The xSOL stability mod collateral ratio activation threshold.
+        stab_mod1 (float): The fSOL stability mod collateral ratio activation threshold.
 
     Returns:
         float: The adjustment required for fSOL.

@@ -5,7 +5,11 @@ import numpy as np
 import configparser
 from utils.simulation_utils import (mint_fSOL, mint_xSOL, recalculate_pX, calculate_collateral_ratio, use_stability_pool_fSOL, use_stability_pool_xSOL, update_fSOL_in_stability_pool)
 from utils.event_distributions import (get_action_probabilities, get_mint_amount)
-from typing import Tuple, List
+from typing import Tuple, List, NamedTuple
+
+
+SimulationState = namedtuple('SimulationState', 'nSOL pF pX nF nX stabSOL_nF stabxSOL_nF')
+
 
 class Action(enum.Enum):
     MintFSOL = 1
@@ -17,9 +21,26 @@ class Action(enum.Enum):
     UpdateMarketPrices = 7
     UpdatefSOLInStabilityPool = 8
 
+class StabilityPoolValues(NamedTuple):
+    nSOL: float
+    nF: float
+    nX: float
+    pX: float
+    stab_nF: float
 
-# Using namedtuple to define a Simulation State
-SimulationState = namedtuple('SimulationState', 'nSOL pF pX nF nX stabSOL_nF stabxSOL_nF')
+class UpdateStabilityPoolsResult(NamedTuple):
+    state: 'SimulationState'
+    stability_pool_fSOL_xSOL_changed: bool
+    stability_pool_fSOL_SOL_changed: bool
+    pre_UpdatefSOLInStabilityPool_values: StabilityPoolValues
+    post_UpdatefSOLInStabilityPool_values: StabilityPoolValues
+    collateral_ratio_post_stab_xSOL: float
+    pre_StabilityPoolxSOL_values: StabilityPoolValues
+    post_StabilityPoolxSOL_values: StabilityPoolValues
+    pre_StabilityPoolSOL_values: StabilityPoolValues
+    post_StabilityPoolSOL_values: StabilityPoolValues
+    collateral_ratio_post_stab_SOL: float
+
 
 class Simulation:
     def __init__(self, config_path: str = 'config.ini') -> None:
@@ -94,52 +115,85 @@ class Simulation:
             return state._replace(stabSOL_nF=new_stabSOL_nF, stabxSOL_nF=new_stabxSOL_nF), False
         
     
-    def update_stability_pools(self, state, pSOL_current: float, stab_mod_fSOL_xSOL: float, stab_mod_fSOL_SOL: float, collateral_ratio: float):
-        pre_UpdatefSOLInStabilityPool_values = {
-            "stabSOL_nF": state.stabSOL_nF,
-            "stabxSOL_nF": state.stabxSOL_nF
-        }
+    def update_stability_pools(self, state, pSOL_current: float, stab_mod_fSOL_xSOL: float, stab_mod_fSOL_SOL: float, collateral_ratio: float) -> UpdateStabilityPoolsResult:
+        pre_UpdatefSOLInStabilityPool_values = StabilityPoolValues(
+            nSOL=state.nSOL,
+            nF=state.nF,
+            nX=state.nX,
+            pX=state.pX,
+            stab_nF=state.stabSOL_nF
+        )
 
-        # Update fSOL in stability pools
         state, _ = self.handle_action(state, Action.UpdatefSOLInStabilityPool, collateral_ratio, pSOL_current, stab_mod_fSOL_xSOL, stab_mod_fSOL_SOL)
 
-        post_UpdatefSOLInStabilityPool_values = {
-            "stabSOL_nF": state.stabSOL_nF,
-            "stabxSOL_nF": state.stabxSOL_nF
-        }
+        post_UpdatefSOLInStabilityPool_values = StabilityPoolValues(
+            nSOL=state.nSOL,
+            nF=state.nF,
+            nX=state.nX,
+            pX=state.pX,
+            stab_nF=state.stabSOL_nF
+        )
 
-        pre_StabilityPoolxSOL_values = {
-            "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
-            "stabxSOL_nF": state.stabxSOL_nF
-        }
+        pre_StabilityPoolxSOL_values = StabilityPoolValues(
+            nSOL=state.nSOL,
+            nF=state.nF,
+            nX=state.nX,
+            pX=state.pX,
+            stab_nF=state.stabxSOL_nF
+        )
+
         if collateral_ratio < stab_mod_fSOL_xSOL:
             state, stability_pool_fSOL_xSOL_changed = self.handle_action(state, Action.StabilityPoolxSOL, stab_mod_fSOL_xSOL, pSOL_current)
         else:
             stability_pool_fSOL_xSOL_changed = False
 
-        post_StabilityPoolxSOL_values = {
-            "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
-            "stabxSOL_nF": state.stabxSOL_nF
-        }
+        post_StabilityPoolxSOL_values = StabilityPoolValues(
+            nSOL=state.nSOL,
+            nF=state.nF,
+            nX=state.nX,
+            pX=state.pX,
+            stab_nF=state.stabxSOL_nF
+        )
+
         collateral_ratio_post_stab_xSOL = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
 
-        pre_StabilityPoolSOL_values = {
-            "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
-            "stabSOL_nF": state.stabSOL_nF
-        }
+        pre_StabilityPoolSOL_values = StabilityPoolValues(
+            nSOL=state.nSOL,
+            nF=state.nF,
+            nX=state.nX,
+            pX=state.pX,
+            stab_nF=state.stabSOL_nF
+        )
+
         if collateral_ratio_post_stab_xSOL < stab_mod_fSOL_SOL:
             state, stability_pool_fSOL_SOL_changed = self.handle_action(state, Action.StabilityPoolSOL, stab_mod_fSOL_SOL, pSOL_current)
         else:
             stability_pool_fSOL_SOL_changed = False
 
-        post_StabilityPoolSOL_values = {
-            "fSOL_xSOL": (state.nSOL, state.nF, state.nX, state.pX),
-            "stabSOL_nF": state.stabSOL_nF
-        }
-        # Calculate collateral ratios post stability pool adjustments
+        post_StabilityPoolSOL_values = StabilityPoolValues(
+            nSOL=state.nSOL,
+            nF=state.nF,
+            nX=state.nX,
+            pX=state.pX,
+            stab_nF=state.stabSOL_nF
+        )
+
         collateral_ratio_post_stab_SOL = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
 
-        return state, stability_pool_fSOL_xSOL_changed, stability_pool_fSOL_SOL_changed, pre_UpdatefSOLInStabilityPool_values, post_UpdatefSOLInStabilityPool_values, collateral_ratio_post_stab_xSOL, pre_StabilityPoolxSOL_values, post_StabilityPoolxSOL_values, pre_StabilityPoolSOL_values, post_StabilityPoolSOL_values, collateral_ratio_post_stab_SOL
+        return UpdateStabilityPoolsResult(
+            state=state,
+            stability_pool_fSOL_xSOL_changed = stability_pool_fSOL_xSOL_changed,
+            stability_pool_fSOL_SOL_changed = stability_pool_fSOL_SOL_changed,
+            pre_UpdatefSOLInStabilityPool_values = pre_UpdatefSOLInStabilityPool_values,
+            post_UpdatefSOLInStabilityPool_values = post_UpdatefSOLInStabilityPool_values,
+            collateral_ratio_post_stab_xSOL = collateral_ratio_post_stab_xSOL,
+            pre_StabilityPoolxSOL_values = pre_StabilityPoolxSOL_values,
+            post_StabilityPoolxSOL_values = post_StabilityPoolxSOL_values,
+            pre_StabilityPoolSOL_values = pre_StabilityPoolSOL_values,
+            post_StabilityPoolSOL_values = post_StabilityPoolSOL_values,
+            collateral_ratio_post_stab_SOL = collateral_ratio_post_stab_SOL
+        )
+    
 
     def run_simulation(
         self, 
@@ -172,54 +226,55 @@ class Simulation:
                 state, _ = self.handle_action(state, action, amount, pSOL_current)
 
             
-            state, stability_pool_fSOL_xSOL_changed, stability_pool_fSOL_SOL_changed, pre_UpdatefSOLInStabilityPool_values, post_UpdatefSOLInStabilityPool_values, collateral_ratio_post_stab_xSOL, pre_StabilityPoolxSOL_values, post_StabilityPoolxSOL_values, pre_StabilityPoolSOL_values, post_StabilityPoolSOL_values, collateral_ratio_post_stab_SOL = self.update_stability_pools(
+            result = self.update_stability_pools(
                 state, pSOL_current, stab_mod_fSOL_xSOL, stab_mod_fSOL_SOL, collateral_ratio
             )
 
-            # Calculate stability pool usage
-            stability_pool_fSOL_xSOL_usage_nF_redeemed = pre_StabilityPoolxSOL_values['fSOL_xSOL'][1] - post_StabilityPoolxSOL_values['fSOL_xSOL'][1]
-            stability_pool_fSOL_SOL_usage_nF_redeemed = pre_StabilityPoolSOL_values['fSOL_xSOL'][1] - post_StabilityPoolSOL_values['fSOL_xSOL'][1]
+            state = result.state
 
-            if stability_pool_fSOL_xSOL_changed:
+            stability_pool_fSOL_xSOL_usage_nF_redeemed = result.pre_StabilityPoolxSOL_values.nF - result.post_StabilityPoolxSOL_values.nF
+            stability_pool_fSOL_SOL_usage_nF_redeemed = result.pre_StabilityPoolSOL_values.nF - result.post_StabilityPoolSOL_values.nF
+
+            if result.stability_pool_fSOL_xSOL_changed:
                 stability_pool_fSOL_xSOL_non_zero_count += 1
                 stability_pool_fSOL_xSOL_non_usage += stability_pool_fSOL_xSOL_usage_nF_redeemed
 
-            if stability_pool_fSOL_SOL_changed:
+            if result.stability_pool_fSOL_SOL_changed:
                 stability_pool_fSOL_SOL_non_zero_count += 1
                 stability_pool_fSOL_SOL_usage += stability_pool_fSOL_SOL_usage_nF_redeemed
 
             day_data = {
                 "day": day,
                 "pSOL": pSOL_current,
-                "pre_nSOL1": pre_StabilityPoolSOL_values['fSOL_xSOL'][0],
-                "pre_nSOL": pre_StabilityPoolxSOL_values['fSOL_xSOL'][0],
+                "pre_nSOL1": result.pre_StabilityPoolSOL_values.nSOL,
+                "pre_nSOL": result.pre_StabilityPoolxSOL_values.nSOL,
                 "nSOL": state.nSOL,
-                "pre_nF": pre_StabilityPoolxSOL_values['fSOL_xSOL'][1],
-                "pre_nF1": pre_StabilityPoolSOL_values['fSOL_xSOL'][1],
+                "pre_nF": result.pre_StabilityPoolxSOL_values.nF,
+                "pre_nF1": result.pre_StabilityPoolSOL_values.nF,
                 "pF": state.pF,
                 "nF": state.nF,
-                "pre_pX": pre_StabilityPoolxSOL_values['fSOL_xSOL'][3],
-                "pre_pX1": pre_StabilityPoolSOL_values['fSOL_xSOL'][3],
+                "pre_pX": result.pre_StabilityPoolxSOL_values.pX,
+                "pre_pX1": result.pre_StabilityPoolSOL_values.pX,
                 "pX": state.pX,
-                "pre_nX": pre_StabilityPoolxSOL_values['fSOL_xSOL'][2],
-                "pre_nX1": pre_StabilityPoolSOL_values['fSOL_xSOL'][2],
+                "pre_nX": result.pre_StabilityPoolxSOL_values.nX,
+                "pre_nX1": result.pre_StabilityPoolSOL_values.nX,
                 "nX": state.nX,
                 "Marketcap fSOL": state.pF * state.nF,
                 "Marketcap xSOL": state.pX * state.nX,
                 "Collateralization ratio": collateral_ratio,
-                "Collateralization ratio Post Stab1": collateral_ratio_post_stab_xSOL,
-                "Collateralization ratio Post Stab2": collateral_ratio_post_stab_SOL,
-                "Stab1 nSOL removed": pre_StabilityPoolxSOL_values['fSOL_xSOL'][0] - post_StabilityPoolxSOL_values['fSOL_xSOL'][0],
+                "Collateralization ratio Post Stab1": result.collateral_ratio_post_stab_xSOL,
+                "Collateralization ratio Post Stab2": result.collateral_ratio_post_stab_SOL,
+                "Stab1 nSOL removed": result.pre_StabilityPoolxSOL_values.nSOL - result.post_StabilityPoolxSOL_values.nSOL,
                 "Stab1 nF burned": stability_pool_fSOL_xSOL_usage_nF_redeemed,
-                "Stab1 nX minted":  post_StabilityPoolxSOL_values['fSOL_xSOL'][2] - pre_StabilityPoolxSOL_values['fSOL_xSOL'][2],
-                "Stab2 nSOL moved": pre_StabilityPoolSOL_values['fSOL_xSOL'][0] - post_StabilityPoolSOL_values['fSOL_xSOL'][0],
+                "Stab1 nX minted": result.post_StabilityPoolxSOL_values.nX - result.pre_StabilityPoolxSOL_values.nX,
+                "Stab2 nSOL moved": result.pre_StabilityPoolSOL_values.nSOL - result.post_StabilityPoolSOL_values.nSOL,
                 "Stab2 nF burned": stability_pool_fSOL_SOL_usage_nF_redeemed,
-                "Stab2 nX minted": post_StabilityPoolSOL_values['fSOL_xSOL'][2] - pre_StabilityPoolSOL_values['fSOL_xSOL'][2],
-                "pre_stabSOL_nF": pre_UpdatefSOLInStabilityPool_values['stabSOL_nF'],
-                "post_stabSOL_nF": post_UpdatefSOLInStabilityPool_values['stabSOL_nF'],
+                "Stab2 nX minted": result.post_StabilityPoolSOL_values.nX - result.pre_StabilityPoolSOL_values.nX,
+                "pre_stabSOL_nF": result.pre_UpdatefSOLInStabilityPool_values.stab_nF,
+                "post_stabSOL_nF": result.post_UpdatefSOLInStabilityPool_values.stab_nF,
                 "stabSOL_nF": state.stabSOL_nF,
-                "pre_stabxSOL_nF": pre_UpdatefSOLInStabilityPool_values['stabxSOL_nF'],
-                "post_stabxSOL_nF": post_UpdatefSOLInStabilityPool_values['stabxSOL_nF'],
+                "pre_stabxSOL_nF": result.pre_UpdatefSOLInStabilityPool_values.stab_nF,
+                "post_stabxSOL_nF": result.post_UpdatefSOLInStabilityPool_values.stab_nF,
                 "stabxSOL_nF": state.stabxSOL_nF,
                 "empty": None
             }
