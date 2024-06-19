@@ -1,12 +1,12 @@
 import numpy as np
-from modelisation.hylo_modelisation import Simulation
+from model.hylo_modelisation import Simulation
 from typing import List
 
 def run_hylo_simulations(
     price_paths: np.ndarray,
-    stab_mod_fSOL_SOL: float,
-    stab_mod_fee_control: float,
-    stab_mod_fSOL_xSOL: float,
+    stab_mode_hyUSD_SOL: float,
+    stab_mode_fee_control: float,
+    stab_mode_hyUSD_xSOL: float,
     num_runs_per_path: int,
     run_id: int,
 ):
@@ -15,6 +15,6 @@ def run_hylo_simulations(
     for path_index, path in enumerate(price_paths.T):
         
         for sub_run_id in range(1, num_runs_per_path + 1):
-            sim.run_simulation(path, stab_mod_fSOL_SOL, stab_mod_fee_control, stab_mod_fSOL_xSOL, run_id, sub_run_id)
+            sim.run_simulation(path, stab_mode_hyUSD_SOL, stab_mode_fee_control, stab_mode_hyUSD_xSOL, run_id, sub_run_id)
 
             
