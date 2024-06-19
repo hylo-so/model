@@ -6,7 +6,8 @@ import configparser
 from modelisation.utils.simulation_utils import (mint_fSOL, mint_xSOL, recalculate_pX, calculate_collateral_ratio, use_stability_pool_fSOL, use_stability_pool_xSOL, update_fSOL_in_stability_pool)
 from modelisation.utils.event_distributions import (get_action_probabilities, get_mint_amount)
 from typing import Tuple, List, NamedTuple
-import os
+from pandas import json_normalize
+
 
 
 SimulationState = namedtuple('SimulationState', 'nSOL pF pX nF nX stabSOL_nF stabxSOL_nF')
@@ -247,76 +248,40 @@ class Simulation:
                 stability_pool_fSOL_SOL_usage += stability_pool_fSOL_SOL_usage_nF_redeemed
 
             day_data = {
-                "day": day,
-                "prices": {
-                    "pSOL": pSOL_current,
-                    "pF": state.pF,
-                    "pX": state.pX,
-                },
-                "pre_stability_pool_values": {
-                    "SOL": {
-                        "nSOL": result.pre_StabilityPoolSOL_values.nSOL,
-                        "nF": result.pre_StabilityPoolSOL_values.nF,
-                        "pX": result.pre_StabilityPoolSOL_values.pX,
-                        "nX": result.pre_StabilityPoolSOL_values.nX,
-                    },
-                    "xSOL": {
-                        "nSOL": result.pre_StabilityPoolxSOL_values.nSOL,
-                        "nF": result.pre_StabilityPoolxSOL_values.nF,
-                        "pX": result.pre_StabilityPoolxSOL_values.pX,
-                        "nX": result.pre_StabilityPoolxSOL_values.nX,
-                    },
-                },
-                "post_stability_pool_values": {
-                    "SOL": {
-                        "nSOL": result.post_StabilityPoolSOL_values.nSOL,
-                        "nF": result.post_StabilityPoolSOL_values.nF,
-                        "pX": result.post_StabilityPoolSOL_values.pX,
-                        "nX": result.post_StabilityPoolSOL_values.nX,
-                    },
-                    "xSOL": {
-                        "nSOL": result.post_StabilityPoolxSOL_values.nSOL,
-                        "nF": result.post_StabilityPoolxSOL_values.nF,
-                        "pX": result.post_StabilityPoolxSOL_values.pX,
-                        "nX": result.post_StabilityPoolxSOL_values.nX,
-                    },
-                },
-                "current_state": {
-                    "nSOL": state.nSOL,
-                    "nF": state.nF,
-                    "nX": state.nX,
-                },
-                "marketcap": {
-                    "fSOL": state.pF * state.nF,
-                    "xSOL": state.pX * state.nX,
-                },
-                "collateralization_ratios": {
-                    "initial": collateral_ratio,
-                    "post_stab1": result.collateral_ratio_post_stab_xSOL,
-                    "post_stab2": result.collateral_ratio_post_stab_SOL,
-                },
-                "stability_pool_changes": {
-                    "stab1": {
-                        "nSOL_removed": result.pre_StabilityPoolxSOL_values.nSOL - result.post_StabilityPoolxSOL_values.nSOL,
-                        "nF_burned": stability_pool_fSOL_xSOL_usage_nF_redeemed,
-                        "nX_minted": result.post_StabilityPoolxSOL_values.nX - result.pre_StabilityPoolxSOL_values.nX,
-                    },
-                    "stab2": {
-                        "nSOL_moved": result.pre_StabilityPoolSOL_values.nSOL - result.post_StabilityPoolSOL_values.nSOL,
-                        "nF_burned": stability_pool_fSOL_SOL_usage_nF_redeemed,
-                        "nX_minted": result.post_StabilityPoolSOL_values.nX - result.pre_StabilityPoolSOL_values.nX,
-                    },
-                },
-                "fSOL_in_stability_pool": {
-                    "pre_stabSOL_nF": result.pre_UpdatefSOLInStabilityPool_values.stab_nF,
-                    "post_stabSOL_nF": result.post_UpdatefSOLInStabilityPool_values.stab_nF,
-                    "stabSOL_nF": state.stabSOL_nF,
-                    "pre_stabxSOL_nF": result.pre_UpdatefSOLInStabilityPool_values.stab_nF,
-                    "post_stabxSOL_nF": result.post_UpdatefSOLInStabilityPool_values.stab_nF,
-                    "stabxSOL_nF": state.stabxSOL_nF,
-                },
-                "empty": None
-            }
+            "day": day,
+            "pSOL": pSOL_current,
+            "pre_nSOL_SOL": result.pre_StabilityPoolSOL_values.nSOL,
+            "pre_nSOL_xSOL": result.pre_StabilityPoolxSOL_values.nSOL,
+            "nSOL": state.nSOL,
+            "pre_nF_xSOL": result.pre_StabilityPoolxSOL_values.nF,
+            "pre_nF_SOL": result.pre_StabilityPoolSOL_values.nF,
+            "pF": state.pF,
+            "nF": state.nF,
+            "pre_pX_xSOL": result.pre_StabilityPoolxSOL_values.pX,
+            "pre_pX_SOL": result.pre_StabilityPoolSOL_values.pX,
+            "pX": state.pX,
+            "pre_nX_xSOL": result.pre_StabilityPoolxSOL_values.nX,
+            "pre_nX_SOL": result.pre_StabilityPoolSOL_values.nX,
+            "nX": state.nX,
+            "marketcap_fSOL": state.pF * state.nF,
+            "marketcap_xSOL": state.pX * state.nX,
+            "xSOL_leverage" : state.nSOL/ (state.pX * state.nX / pSOL_current),
+            "collateralization_ratio_initial": collateral_ratio,
+            "collateralization_ratio_post_stab_xSOL": result.collateral_ratio_post_stab_xSOL,
+            "collateralization_ratio_post_stab_SOL": result.collateral_ratio_post_stab_SOL,
+            "stab_xSOL_nSOL_removed": result.pre_StabilityPoolxSOL_values.nSOL - result.post_StabilityPoolxSOL_values.nSOL,
+            "stab_xSOL_nF_burned": stability_pool_fSOL_xSOL_usage_nF_redeemed,
+            "stab_xSOL_nX_minted": result.post_StabilityPoolxSOL_values.nX - result.pre_StabilityPoolxSOL_values.nX,
+            "stab_SOL_nSOL_moved": result.pre_StabilityPoolSOL_values.nSOL - result.post_StabilityPoolSOL_values.nSOL,
+            "stab_SOL_nF_burned": stability_pool_fSOL_SOL_usage_nF_redeemed,
+            "stab_SOL_nX_minted": result.post_StabilityPoolSOL_values.nX - result.pre_StabilityPoolSOL_values.nX,
+            "pre_stabSOL_nF": result.pre_UpdatefSOLInStabilityPool_values.stab_nF,
+            "post_stabSOL_nF": result.post_UpdatefSOLInStabilityPool_values.stab_nF,
+            "stabSOL_nF": state.stabSOL_nF,
+            "pre_stabxSOL_nF": result.pre_UpdatefSOLInStabilityPool_values.stab_nF,
+            "post_stabxSOL_nF": result.post_UpdatefSOLInStabilityPool_values.stab_nF,
+            "stabxSOL_nF": state.stabxSOL_nF,
+        }
 
             daily_data.append(day_data)
 
