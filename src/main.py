@@ -5,6 +5,8 @@ import configparser
 import os
 import shutil
 from modelisation.run_hylo_simulations import run_hylo_simulations
+from typing import List, Tuple
+
 
 # Read configuration
 config = configparser.ConfigParser()
@@ -47,8 +49,18 @@ def count_decimal_places(value):
 
 decimal_places = count_decimal_places(sModeStep)
 
-def simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range, output_directory):
-    stability_thresholds = [
+def simulate_and_collect_data(
+    file_path: str,
+    beta: float,
+    T: int,
+    N: int,
+    stab_mod_fSOL_SOL_range: np.ndarray,
+    stab_mod_fee_control_range: np.ndarray,
+    num_runs_per_path: int,
+    stab_mod_fSOL_xSOL_range: np.ndarray,
+    output_directory: str
+) -> None:
+    stability_thresholds: List[Tuple[float, float, float]] = [
         (round(fSOL_SOL, decimal_places), round(fee_control, decimal_places), round(fSOL_xSOL, decimal_places))
         for fSOL_SOL, fee_control, fSOL_xSOL in product(stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, stab_mod_fSOL_xSOL_range)
         if fSOL_SOL <= fee_control or fSOL_xSOL <= fee_control
@@ -58,8 +70,8 @@ def simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, st
     for (current_iteration, (stab_mod_fSOL_SOL, stab_mod_fee_control, stab_mod_fSOL_xSOL)) in enumerate(stability_thresholds, start=1):
         print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod_fSOL_SOL={stab_mod_fSOL_SOL:.{decimal_places}f}, stab_mod_fee_control={stab_mod_fee_control:.{decimal_places}f}, stab_mod_fSOL_xSOL={stab_mod_fSOL_xSOL:.{decimal_places}f})")
         
-        # Run simulations and collect results
-        result = run_hylo_simulations(
+        # Run simulations
+        run_hylo_simulations(
             file_path,
             T,
             N,
@@ -71,10 +83,11 @@ def simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, st
             output_directory=output_directory
         )
          
-    return
+    print("All simulations completed.")
 
-# Clear the output directory once at the start
+
+# Clear the output directory at the start
 clear_output_directory(output_directory)
 
 # Run simulations
-results_df = simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range, output_directory)
+simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range, output_directory)
