@@ -1,5 +1,5 @@
 import numpy as np
-from modelisation.hyloModelisation import Simulation
+from modelisation.hylo_modelisation import Simulation
 from typing import List
 
 def run_hylo_simulations(
