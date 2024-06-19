@@ -4,7 +4,7 @@ import numpy as np
 import configparser
 import os
 import shutil
-from modMCPrice import run_hylo_simulations
+from modelisation.run_hylo_simulations import run_hylo_simulations
 
 # Read configuration
 config = configparser.ConfigParser()
@@ -48,7 +48,6 @@ def count_decimal_places(value):
 decimal_places = count_decimal_places(sModeStep)
 
 def simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range, output_directory):
-    results = []
     stability_thresholds = [
         (round(fSOL_SOL, decimal_places), round(fee_control, decimal_places), round(fSOL_xSOL, decimal_places))
         for fSOL_SOL, fee_control, fSOL_xSOL in product(stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, stab_mod_fSOL_xSOL_range)
@@ -71,16 +70,11 @@ def simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, st
             num_runs_per_path=num_runs_per_path,
             output_directory=output_directory
         )
-        
-        results.append((stab_mod_fSOL_SOL, stab_mod_fee_control, stab_mod_fSOL_xSOL, result['average_stability_pool_fSOL_SOL_non_zero'], result['average_xSOL_negative_price'], result['average_xSOL_negative_price_run']))
-    
-    return pd.DataFrame(results, columns=['stab_mod_fSOL_SOL', 'stab_mod_fee_control', 'stab_mod_fSOL_xSOL', 'Avg Stability Pool Non-Zero', 'Avg Negative xSOL Prices', 'Avg Collateral Ratio'])
+         
+    return
 
 # Clear the output directory once at the start
 clear_output_directory(output_directory)
 
 # Run simulations
 results_df = simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range, output_directory)
-
-# Display results
-print(results_df)
