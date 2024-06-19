@@ -5,8 +5,8 @@ import configparser
 import os
 import shutil
 from modelisation.run_hylo_simulations import run_hylo_simulations
+from modelisation.utils.monteCarlo import generate_monte_carlo_price_paths
 from typing import List, Tuple
-
 
 # Read configuration
 config = configparser.ConfigParser()
@@ -58,36 +58,36 @@ def simulate_and_collect_data(
     stab_mod_fee_control_range: np.ndarray,
     num_runs_per_path: int,
     stab_mod_fSOL_xSOL_range: np.ndarray,
-    output_directory: str
 ) -> None:
     stability_thresholds: List[Tuple[float, float, float]] = [
         (round(fSOL_SOL, decimal_places), round(fee_control, decimal_places), round(fSOL_xSOL, decimal_places))
         for fSOL_SOL, fee_control, fSOL_xSOL in product(stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, stab_mod_fSOL_xSOL_range)
         if fSOL_SOL <= fee_control or fSOL_xSOL <= fee_control
     ]
-    total_iterations = len(stability_thresholds)
+    total_iterations = len(stability_thresholds) * N
+    run_id = 1
     
-    for (current_iteration, (stab_mod_fSOL_SOL, stab_mod_fee_control, stab_mod_fSOL_xSOL)) in enumerate(stability_thresholds, start=1):
-        print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod_fSOL_SOL={stab_mod_fSOL_SOL:.{decimal_places}f}, stab_mod_fee_control={stab_mod_fee_control:.{decimal_places}f}, stab_mod_fSOL_xSOL={stab_mod_fSOL_xSOL:.{decimal_places}f})")
+    for i in range(N):
+        price_paths = generate_monte_carlo_price_paths(file_path, beta, T, 1)
         
-        # Run simulations
-        run_hylo_simulations(
-            file_path,
-            T,
-            N,
-            beta,
-            stab_mod_fSOL_SOL,
-            stab_mod_fee_control,
-            stab_mod_fSOL_xSOL,
-            num_runs_per_path=num_runs_per_path,
-            output_directory=output_directory
-        )
-         
+        for (current_iteration, (stab_mod_fSOL_SOL, stab_mod_fee_control, stab_mod_fSOL_xSOL)) in enumerate(stability_thresholds, start=1):
+            print(f"Running simulation {i * len(stability_thresholds) + current_iteration}/{total_iterations}")
+            
+            # Run simulations
+            run_hylo_simulations(
+                price_paths,
+                stab_mod_fSOL_SOL,
+                stab_mod_fee_control,
+                stab_mod_fSOL_xSOL,
+                num_runs_per_path=num_runs_per_path,
+                run_id=run_id,
+            )
+        run_id += 1
+             
     print("All simulations completed.")
 
-
-# Clear the output directory at the start
+# Clear the output directory once at the start
 clear_output_directory(output_directory)
 
-# Run simulations
-simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range, output_directory)
+# Run simulations without collecting results
+simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range)
