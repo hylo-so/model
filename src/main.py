@@ -49,7 +49,7 @@ def count_decimal_places(value):
 
 decimal_places = count_decimal_places(sModeStep)
 
-def simulate_and_collect_data(
+def simulate(
     file_path: str,
     beta: float,
     T: int,
@@ -89,5 +89,5 @@ def simulate_and_collect_data(
 # Clear the output directory once at the start
 clear_output_directory(output_directory)
 
-# Run simulations without collecting results
-simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range)
+
+simulate(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range)
