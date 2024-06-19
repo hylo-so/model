@@ -4,7 +4,7 @@ import numpy as np
 import configparser
 import os
 import shutil
-from modMCPrice import run_monte_carlo_simulations
+from modMCPrice import run_hylo_simulations
 
 # Read configuration
 config = configparser.ConfigParser()
@@ -38,16 +38,29 @@ def clear_output_directory(directory_path: str):
             except Exception as e:
                 print(f'Failed to delete {file_path}. Reason: {e}')
 
+# Determine the number of decimal places in sModeStep
+def count_decimal_places(value):
+    text = str(value)
+    if '.' in text:
+        return len(text.split('.')[1])
+    return 0
+
+decimal_places = count_decimal_places(sModeStep)
+
 def simulate_and_collect_data(file_path, beta, T, N, stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, num_runs_per_path, stab_mod_fSOL_xSOL_range, output_directory):
     results = []
-    stability_thresholds = [(fSOL_SOL, fee_control, fSOL_xSOL) for fSOL_SOL, fee_control, fSOL_xSOL in product(stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, stab_mod_fSOL_xSOL_range) if fSOL_SOL <= fee_control or fSOL_xSOL <= fee_control]
+    stability_thresholds = [
+        (round(fSOL_SOL, decimal_places), round(fee_control, decimal_places), round(fSOL_xSOL, decimal_places))
+        for fSOL_SOL, fee_control, fSOL_xSOL in product(stab_mod_fSOL_SOL_range, stab_mod_fee_control_range, stab_mod_fSOL_xSOL_range)
+        if fSOL_SOL <= fee_control or fSOL_xSOL <= fee_control
+    ]
     total_iterations = len(stability_thresholds)
     
     for (current_iteration, (stab_mod_fSOL_SOL, stab_mod_fee_control, stab_mod_fSOL_xSOL)) in enumerate(stability_thresholds, start=1):
-        print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod_fSOL_SOL={stab_mod_fSOL_SOL:.2f}, stab_mod_fee_control={stab_mod_fee_control:.2f}, stab_mod_fSOL_xSOL={stab_mod_fSOL_xSOL:.2f})")
+        print(f"Running simulation {current_iteration}/{total_iterations} (stab_mod_fSOL_SOL={stab_mod_fSOL_SOL:.{decimal_places}f}, stab_mod_fee_control={stab_mod_fee_control:.{decimal_places}f}, stab_mod_fSOL_xSOL={stab_mod_fSOL_xSOL:.{decimal_places}f})")
         
         # Run simulations and collect results
-        result = run_monte_carlo_simulations(
+        result = run_hylo_simulations(
             file_path,
             T,
             N,

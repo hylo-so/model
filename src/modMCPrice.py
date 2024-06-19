@@ -4,7 +4,7 @@ import numpy as np
 from modelisation.utils.monteCarlo import generate_monte_carlo_price_paths
 from modelisation.hyloModelisation import Simulation
 
-def run_monte_carlo_simulations(
+def run_hylo_simulations(
     file_path: str,
     T: int,
     N: int,
