@@ -11,7 +11,7 @@ fig, ax1 = plt.subplots(figsize=(10, 6))
 color = 'tab:red'
 ax1.set_xlabel('day')
 ax1.set_ylabel('Marketcap (nF and nX)', color=color)
-ax1.plot(data['day'], data['Marketcap fSOL'], label='Marketcap fSOL', color='r')
+ax1.plot(data['day'], data['Marketcap hyUSD'], label='Marketcap hyUSD', color='r')
 ax1.plot(data['day'], data['Marketcap xSOL'], label='Marketcap xSOL', color='b')
 ax1.plot(data['day'], data['value of SOL in $'], label='value of SOL in $', color='orange')
 ax1.tick_params(axis='y', labelcolor=color)

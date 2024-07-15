@@ -6,18 +6,18 @@ class MintResult(NamedTuple):
     updated_nSOL: float
 
 class StabilityPoolxSOLResult(NamedTuple):
-    fSOL_to_burn: float
+    hyUSD_to_burn: float
     xSOL_to_mint: float
     changed: bool
 
 
 class StabilityPoolFSOLResult(NamedTuple):
-    fSOL_to_burn: float
+    hyUSD_to_burn: float
     changed: bool
 
 
 class AdjustFSOLResult(NamedTuple):
-    fSOL_burned: float
+    hyUSD_burned: float
     xSOL_SOL_mcap: float
     SOL_moved: float
 
@@ -41,7 +41,7 @@ def adjust_SOL_reserve(
     SOL_change = amount_in_dollars / pSOL_current
     return nSOL + SOL_change
 
-def mint_fSOL(
+def mint_hyUSD(
     nF: float, 
     nSOL: float, 
     amount: float, 
@@ -49,18 +49,18 @@ def mint_fSOL(
     pSOL_current: float
 ) -> MintResult:
     """
-    Mints fSOL and adjusts the SOL reserve accordingly.
+    Mints hyUSD and adjusts the SOL reserve accordingly.
 
     Args:
-        nF (float): The current amount of fSOL.
+        nF (float): The current amount of hyUSD.
         nSOL (float): The current amount of SOL.
-        amount (float): The amount of fSOL to mint.
-        pF (float): The price of fSOL.
+        amount (float): The amount of hyUSD to mint.
+        pF (float): The price of hyUSD.
         pSOL_current (float): The current price of SOL.
 
     Returns:
         MintResult: A named tuple containing:
-            updated_n (float): The updated amount of fSOL.
+            updated_n (float): The updated amount of hyUSD.
             updated_nSOL (float): The updated amount of SOL.
     """
     nF += amount
@@ -108,8 +108,8 @@ def recalculate_pX(
     Args:
         nSOL (float): The current amount of SOL.
         pSOL_current (float): The current price of SOL.
-        nF (float): The current amount of fSOL.
-        pF (float): The price of fSOL.
+        nF (float): The current amount of hyUSD.
+        pF (float): The price of hyUSD.
         nX (float): The current amount of xSOL.
 
     Returns:
@@ -126,177 +126,177 @@ def calculate_collateral_ratio(
     pF: float
 ) -> float:
     """
-    Calculates the collateralization ratio of fSOL.
+    Calculates the collateralization ratio of hyUSD.
 
     Args:
         nSOL (float): The current amount of SOL.
         pSOL (float): The price of SOL.
-        nF (float): The current amount of fSOL.
-        pF (float): The price of fSOL.
+        nF (float): The current amount of hyUSD.
+        pF (float): The price of hyUSD.
 
     Returns:
-        float: The collateralization ratio of fSOL.
+        float: The collateralization ratio of hyUSD.
     """
     total_SOL_value = nSOL * pSOL
-    market_cap_fSOL = nF * pF
-    collateralization_ratio_fSOL = total_SOL_value / market_cap_fSOL
-    return collateralization_ratio_fSOL
+    market_cap_hyUSD = nF * pF
+    collateralization_ratio_hyUSD = total_SOL_value / market_cap_hyUSD
+    return collateralization_ratio_hyUSD
 
-def adjust_fSOL_to_target_CR(
+def adjust_hyUSD_to_target_CR(
     nF: float, 
     nX: float, 
     pX: float, 
     pF: float, 
-    stab_mod1: float
+    stab_mode1: float
 ) -> float:
     """
-    Adjusts fSOL to reach the target collateral ratio.
+    Adjusts hyUSD to reach the target collateral ratio.
 
     Args:
-        nF (float): The current amount of fSOL.
+        nF (float): The current amount of hyUSD.
         nX (float): The current amount of xSOL.
         pX (float): The price of xSOL.
-        pF (float): The price of fSOL.
-        stab_mod1 (float): The fSOL stability mod collateral ratio activation threshold.
+        pF (float): The price of hyUSD.
+        stab_mode1 (float): The hyUSD stability mode collateral ratio activation threshold.
 
     Returns:
-        float: The adjustment required for fSOL.
+        float: The adjustment required for hyUSD.
     """
-    nF_required = (nX * pX) / (pF * (stab_mod1 - 1))
-    fSOL_adjustment = nF_required - nF
-    return fSOL_adjustment if fSOL_adjustment <= 0 else 0
+    nF_required = (nX * pX) / (pF * (stab_mode1 - 1))
+    hyUSD_adjustment = nF_required - nF
+    return hyUSD_adjustment if hyUSD_adjustment <= 0 else 0
 
-def update_fSOL_in_stability_pool(
+def update_hyUSD_in_stability_pool(
     stab_nF: float, 
     nF: float, 
     min_recovery_per: float, 
     max_recovery_per: float, 
-    fSOL_max_staked_per: float
+    hyUSD_max_staked_per: float
 ) -> float:
     """
-    Updates the amount of fSOL in the stability pool.
+    Updates the amount of hyUSD in the stability pool.
 
     Args:
-        stab_nF (float): The current amount of fSOL in the stability pool.
-        nF (float): The current amount of fSOL.
+        stab_nF (float): The current amount of hyUSD in the stability pool.
+        nF (float): The current amount of hyUSD.
         min_recovery_per (float): The minimum recovery percentage.
         max_recovery_per (float): The maximum recovery percentage.
-        fSOL_max_staked_per (float): The maximum percentage of fSOL that can be staked.
+        hyUSD_max_staked_per (float): The maximum percentage of hyUSD that can be staked.
 
     Returns:
-        float: The updated amount of fSOL in the stability pool.
+        float: The updated amount of hyUSD in the stability pool.
     """
     recovery_amount = nF * np.random.uniform(min_recovery_per, max_recovery_per)
     stab_nF += recovery_amount
-    cap_amount = nF * fSOL_max_staked_per
+    cap_amount = nF * hyUSD_max_staked_per
     if stab_nF > cap_amount:
         stab_nF = cap_amount
     return stab_nF
 
-def use_stability_pool_fSOL(
+def use_stability_pool_hyUSD(
     nF: float, 
     stab_nF: float, 
-    stab_mod1: float, 
+    stab_mode1: float, 
     nX: float, 
     pX: float, 
     pF: float
 ) -> StabilityPoolFSOLResult:
     """
-    Uses fSOL from the stability pool to adjust to the target collateral ratio.
+    Uses hyUSD from the stability pool to adjust to the target collateral ratio.
 
     Args:
-        nF (float): The current amount of fSOL.
-        stab_nF (float): The amount of fSOL in the stability pool.
-        stab_mod1 (float): The fSOL stability mod collateral ratio activation threshold.
+        nF (float): The current amount of hyUSD.
+        stab_nF (float): The amount of hyUSD in the stability pool.
+        stab_mode1 (float): The hyUSD stability mode collateral ratio activation threshold.
         nX (float): The current amount of xSOL.
         pX (float): The price of xSOL.
-        pF (float): The price of fSOL.
+        pF (float): The price of hyUSD.
 
     Returns:
         StabilityPoolFSOLResult: A named tuple containing:
-            fSOL_to_burn (float): The amount of fSOL to burn.
+            hyUSD_to_burn (float): The amount of hyUSD to burn.
             changed (bool): Whether any changes were made.
     """
-    fSOL_adjustment = adjust_fSOL_to_target_CR(nF, nX, pX, pF, stab_mod1)
-    if fSOL_adjustment < 0:
-        max_fSOL_to_burn = stab_nF
-        fSOL_to_burn = -min(-fSOL_adjustment, max_fSOL_to_burn)
-        if fSOL_to_burn != 0:
-            return StabilityPoolFSOLResult(fSOL_to_burn, True)
+    hyUSD_adjustment = adjust_hyUSD_to_target_CR(nF, nX, pX, pF, stab_mode1)
+    if hyUSD_adjustment < 0:
+        max_hyUSD_to_burn = stab_nF
+        hyUSD_to_burn = -min(-hyUSD_adjustment, max_hyUSD_to_burn)
+        if hyUSD_to_burn != 0:
+            return StabilityPoolFSOLResult(hyUSD_to_burn, True)
     return StabilityPoolFSOLResult(0, False)
 
 
-def adjust_fSOL_to_target_CR_xSOL(
+def adjust_hyUSD_to_target_CR_xSOL(
     nF: float, 
     nX: float, 
     nSOL: float, 
     pX: float, 
     pF: float, 
     pSOL: float, 
-    stab_mod2: float
+    stab_mode2: float
 ) -> AdjustFSOLResult:
     """
-    Adjusts fSOL to target collateral ratio using xSOL.
+    Adjusts hyUSD to target collateral ratio using xSOL.
 
     Args:
-        nF (float): The current amount of fSOL.
+        nF (float): The current amount of hyUSD.
         nX (float): The current amount of xSOL.
         nSOL (float): The current amount of SOL.
         pX (float): The price of xSOL.
-        pF (float): The price of fSOL.
+        pF (float): The price of hyUSD.
         pSOL (float): The price of SOL.
-        stab_mod2 (float): The xSOL stability mod collateral ratio activation threshold.
+        stab_mode2 (float): The xSOL stability mode collateral ratio activation threshold.
 
     Returns:
         AdjustFSOLResult: A named tuple containing:
-            fSOL_burned (float): The amount of fSOL to burn.
+            hyUSD_burned (float): The amount of hyUSD to burn.
             xSOL_SOL_mcap (float): The xSOL market cap in SOL.
             SOL_moved (float): The amount of SOL moved.
     """
-    fSOL_SOL_mcap = nF * pF / pSOL  # Total fSOL market cap in SOL
-    xSOL_SOL_mcap = nSOL - fSOL_SOL_mcap
-    target_SOL = nSOL / stab_mod2
-    SOL_moved = fSOL_SOL_mcap - target_SOL
+    hyUSD_SOL_mcap = nF * pF / pSOL  # Total hyUSD market cap in SOL
+    xSOL_SOL_mcap = nSOL - hyUSD_SOL_mcap
+    target_SOL = nSOL / stab_mode2
+    SOL_moved = hyUSD_SOL_mcap - target_SOL
     if SOL_moved > 0:
-        fSOL_burned = SOL_moved / (fSOL_SOL_mcap / nF)  # Amount of fSOL to burn
-        return AdjustFSOLResult(fSOL_burned, xSOL_SOL_mcap, SOL_moved)
+        hyUSD_burned = SOL_moved / (hyUSD_SOL_mcap / nF)  # Amount of hyUSD to burn
+        return AdjustFSOLResult(hyUSD_burned, xSOL_SOL_mcap, SOL_moved)
     return AdjustFSOLResult(0, 0, 0)
 
 def use_stability_pool_xSOL(
     nSOL: float, 
     nF: float, 
     stab2_nF: float, 
-    stab_mod2: float, 
+    stab_mode2: float, 
     nX: float, 
     pX: float, 
     pF: float, 
     pSOL_current: float
 ) -> StabilityPoolxSOLResult:
     """
-    Adjusts fSOL to target collateral ratio using xSOL and returns the results.
+    Adjusts hyUSD to target collateral ratio using xSOL and returns the results.
 
     Args:
         nSOL (float): The amount of SOL.
-        nF (float): The amount of fSOL.
+        nF (float): The amount of hyUSD.
         stab2_nF (float): The amount of nF in xSOL stability pool.
-        stab_mod2 (float): The xSOL stability mod collateral ratio activation threshold.
+        stab_mode2 (float): The xSOL stability mode collateral ratio activation threshold.
         nX (float): The amount of xSOL.
         pX (float): The price of xSOL.
-        pF (float): The price of fSOL.
+        pF (float): The price of hyUSD.
         pSOL_current (float): The current price of SOL.
 
     Returns:
         StabilityPoolxSOLResult: A named tuple containing:
-            fSOL_to_burn (float): The amount of fSOL to burn.
+            hyUSD_to_burn (float): The amount of hyUSD to burn.
             xSOL_to_mint (float): The amount of xSOL to mint.
             changed (bool): Whether any changes were made.
     """
-    fSOL_burned, xSOL_SOL_mcap, SOL_moved = adjust_fSOL_to_target_CR_xSOL(nF, nX, nSOL, pX, pF, pSOL_current, stab_mod2)
-    if fSOL_burned > 0:
-        max_fSOL_to_burn = stab2_nF
-        fSOL_to_burn = min(fSOL_burned, max_fSOL_to_burn)
-        SOL_moved_2 = fSOL_to_burn * (pF / pSOL_current)
+    hyUSD_burned, xSOL_SOL_mcap, SOL_moved = adjust_hyUSD_to_target_CR_xSOL(nF, nX, nSOL, pX, pF, pSOL_current, stab_mode2)
+    if hyUSD_burned > 0:
+        max_hyUSD_to_burn = stab2_nF
+        hyUSD_to_burn = min(hyUSD_burned, max_hyUSD_to_burn)
+        SOL_moved_2 = hyUSD_to_burn * (pF / pSOL_current)
         xSOL_to_mint = SOL_moved_2 / (xSOL_SOL_mcap / nX) 
-        if fSOL_to_burn > 0:
-            return StabilityPoolxSOLResult(-fSOL_to_burn, xSOL_to_mint, True)
+        if hyUSD_to_burn > 0:
+            return StabilityPoolxSOLResult(-hyUSD_to_burn, xSOL_to_mint, True)
     return StabilityPoolxSOLResult(0, 0, False)
