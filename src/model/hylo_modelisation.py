@@ -204,7 +204,8 @@ class Simulation:
         stab_mode_fee_control: float, 
         stab_mode_hyUSD_xSOL: float,
         run_id: int,
-        sub_run_id: float
+        sub_run_id: float,
+        price_path_id: int
     ) -> Tuple[int, int, float, int]:
         daily_data = []
         self.pSOL = simulated_prices[0]
@@ -290,7 +291,7 @@ class Simulation:
                 break
 
         results_df = pd.DataFrame(daily_data)
-        results_csv_path = f'./output/run_{run_id}.{sub_run_id}-SOL_{stab_mode_hyUSD_SOL}-FEE_{stab_mode_fee_control}-xSOL_{stab_mode_hyUSD_xSOL}.csv'
+        results_csv_path = f'./output/run_{run_id}.{sub_run_id}-PATH_{price_path_id}-SOL_{stab_mode_hyUSD_SOL}-FEE_{stab_mode_fee_control}-xSOL_{stab_mode_hyUSD_xSOL}.csv'
         results_df.to_csv(results_csv_path, index=False)
 
         return stability_pool_hyUSD_SOL_non_zero_count, xSOL_negative_price_count, collateral_ratio, stability_pool_hyUSD_xSOL_non_zero_count, stability_pool_hyUSD_xSOL_non_usage, stability_pool_hyUSD_SOL_usage

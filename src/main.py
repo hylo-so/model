@@ -29,12 +29,12 @@ def simulate(
     total_iterations = len(stability_thresholds) * N
     run_id = 1
 
-    if input_price_csv is not None:
-        price_path = clean_price_csv(input_price_csv, T)
-    else:
-        price_path = generate_monte_carlo_price_paths(file_path, beta, T, N)
-
     for i in range(N):
+
+        if input_price_csv is not None:
+            price_path = clean_price_csv(input_price_csv, T)
+        else:
+            price_path = generate_monte_carlo_price_paths(file_path, beta, T, N=1)
         
         for (current_iteration, (stab_mode_hyUSD_SOL, stab_mode_fee_control, stab_mode_hyUSD_xSOL)) in enumerate(stability_thresholds, start=1):
             print(f"Running simulation {i * len(stability_thresholds) + current_iteration}/{total_iterations}")
@@ -47,6 +47,7 @@ def simulate(
                 stab_mode_hyUSD_xSOL,
                 num_runs_per_path=num_runs_per_path,
                 run_id=run_id,
+                price_path_id=i+1
             )
             run_id += 1
              
