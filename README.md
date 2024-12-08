@@ -14,9 +14,27 @@ The model relies on the following key assumptions regarding the probability of n
 The model undergoes multiple iterations, with each run specifically designed to assess the frequency of the stability pool usage and the frequency of negative xSOL price occurrences. Negative xSOL signaling a failure in maintaining the collateralization of hyUSD. Data collected after detecting a negative xSOL price are not considered in this model, as the protocol would require re-collateralization by the team to resume operations, a process not covered by this simulation.
 
 ## Limitations
-This model primarily focuses on daily price returns, whereas, in practice, the protocol's stability would be monitored on a minute-by-minute basis. Consequently, the model may occasionally indicate under-collateralization situations that the protocol, in real-time operations, could effectively manage and mitigate.
 
-Moreover, the model incorporates a stability pool mechanism, where hyUSD is burned to redeem SOL, but it does not account for the conversion from hyUSD to xSOL. This conversion process represents an additional strategy for the protocol to ensure stability, highlighting a significant aspect not covered in the current modeling approach.
+The model has several important limitations to consider:
+
+### Time Resolution
+- The model operates on daily price returns, while the actual protocol monitors and responds to market conditions in real-time
+- This limitation may lead to the model indicating under-collateralization scenarios that the protocol could prevent in practice through its real-time monitoring and response mechanisms
+
+### Stability Mechanisms
+The model does not incorporate several key stability mechanisms of the protocol:
+
+1. **Premium Redemptions**
+   - In stability mode, the protocol can offer bonus on hyUSD redemptions
+   - These bonuses create arbitrage opportunities where traders can profit by:
+     - Buying hyUSD at market price (e.g. $1)
+     - Redeeming it directly through the protocol with a bonus (e.g. $1.01)
+   - This mechanism helps restore the collateral ratio by incentivizing hyUSD purchases on the open market and redemptions through the protocol
+
+2. **Fee-Based Recollateralization**
+   - The protocol accumulates fees from normal operations
+   - These accumulated fees can be used as a last-resort mechanism to recollateralize the system
+   - This provides an additional safety net not reflected in the current model
 
 ## Setup and Usage
 
@@ -61,3 +79,40 @@ This will launch the model with the default parameters. To customize these param
 
 
 Upon completion, two heat maps will be displayed showing the percentage of time that a run has faced a de-collateralization event, and the percentage of time the stability pool has been utilized for different combinations of stability mod.
+
+### Running the Analysis
+
+After running the model, you can analyze the results using the provided analysis tools:
+
+1. **Navigate to the analysis folder**:
+`cd analysis`
+
+2. **Run the analysis script**:
+`python3 analysis.py`
+
+This will generate two CSV files in the `output` directory:
+- `detailed_results.csv`: Contains detailed data for each simulation run
+- `summary_results.csv`: Contains aggregated statistics grouped by parameters
+
+- To visualize the results as heatmaps:
+`python3 create_heatmaps.py`
+
+This will generate `parameter_analysis_heatmaps.png` in the `output` directory, showing:
+- Depeg Event Rate heatmap: Displays the probability of depeg events for different parameter combinations
+- Stability Pool Usage heatmap: Shows the average number of stability pool activations
+
+### Understanding the Analysis Results
+
+The analysis provides several key metrics:
+
+1. **Depeg Events**:
+   - Frequency of situations where the collateral ratio falls below 1
+   - Impact of different xSOL and fee parameters on system stability
+
+2. **Stability Pool Usage**:
+   - Number of times the stability pool was activated
+   - Average activations across different parameter combinations
+
+
+
+
