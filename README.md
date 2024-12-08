@@ -104,7 +104,7 @@ The analysis provides several key metrics:
 
 1. **Depeg Events**:
    - Frequency of situations where the collateral ratio falls below 1
-   - Impact of different xSOL and fee parameters on system stability
+   - The model evaluates how stability mechanisms and fee parameters affect system resilience, specifically analyzing the impact of different collateral ratio thresholds for stability mode (fees control) activation and stability pool intervention.
 
 2. **Stability Pool Usage**:
    - Number of times the stability pool was activated
