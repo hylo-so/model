@@ -162,6 +162,8 @@ def adjust_hyUSD_to_target_CR(
     Returns:
         float: The adjustment required for hyUSD.
     """
+    if abs(stab_mode1 - 1) < 1e-10:  # Using small epsilon instead of exact 0
+        return 0
     nF_required = (nX * pX) / (pF * (stab_mode1 - 1))
     hyUSD_adjustment = nF_required - nF
     return hyUSD_adjustment if hyUSD_adjustment <= 0 else 0

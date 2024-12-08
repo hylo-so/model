@@ -28,7 +28,8 @@ class StabilityPoolValues(NamedTuple):
     nF: float
     nX: float
     pX: float
-    stab_nF: float
+    stab_nF_SOL: float
+    stab_nF_xSOL: float
 
 class UpdateStabilityPoolsResult(NamedTuple):
     state: 'SimulationState'
@@ -123,7 +124,8 @@ class Simulation:
             nF=state.nF,
             nX=state.nX,
             pX=state.pX,
-            stab_nF=state.stabSOL_nF
+            stab_nF_SOL=state.stabSOL_nF,
+            stab_nF_xSOL=state.stabxSOL_nF
         )
 
         state, _ = self.handle_action(state, Action.UpdatehyUSDInStabilityPool, collateral_ratio, pSOL_current, stab_mode_hyUSD_xSOL, stab_mode_hyUSD_SOL)
@@ -133,7 +135,8 @@ class Simulation:
             nF=state.nF,
             nX=state.nX,
             pX=state.pX,
-            stab_nF=state.stabSOL_nF
+            stab_nF_SOL=state.stabSOL_nF,
+            stab_nF_xSOL=state.stabxSOL_nF
         )
 
         pre_StabilityPoolxSOL_values = StabilityPoolValues(
@@ -141,7 +144,8 @@ class Simulation:
             nF=state.nF,
             nX=state.nX,
             pX=state.pX,
-            stab_nF=state.stabxSOL_nF
+            stab_nF_SOL=state.stabSOL_nF,
+            stab_nF_xSOL=state.stabxSOL_nF
         )
 
         if collateral_ratio < stab_mode_hyUSD_xSOL:
@@ -154,7 +158,8 @@ class Simulation:
             nF=state.nF,
             nX=state.nX,
             pX=state.pX,
-            stab_nF=state.stabxSOL_nF
+            stab_nF_SOL=state.stabSOL_nF,
+            stab_nF_xSOL=state.stabxSOL_nF
         )
 
         collateral_ratio_post_stab_xSOL = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
@@ -164,7 +169,8 @@ class Simulation:
             nF=state.nF,
             nX=state.nX,
             pX=state.pX,
-            stab_nF=state.stabSOL_nF
+            stab_nF_SOL=state.stabSOL_nF,
+            stab_nF_xSOL=state.stabxSOL_nF
         )
 
         if collateral_ratio_post_stab_xSOL < stab_mode_hyUSD_SOL:
@@ -177,7 +183,8 @@ class Simulation:
             nF=state.nF,
             nX=state.nX,
             pX=state.pX,
-            stab_nF=state.stabSOL_nF
+            stab_nF_SOL=state.stabSOL_nF,
+            stab_nF_xSOL=state.stabxSOL_nF
         )
 
         collateral_ratio_post_stab_SOL = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
@@ -199,7 +206,7 @@ class Simulation:
 
     def run_simulation(
         self, 
-        simulated_prices: List[float], 
+        price_path: List[float], 
         stab_mode_hyUSD_SOL: float, 
         stab_mode_fee_control: float, 
         stab_mode_hyUSD_xSOL: float,
@@ -208,7 +215,7 @@ class Simulation:
         price_path_id: int
     ) -> Tuple[int, int, float, int]:
         daily_data = []
-        self.pSOL = simulated_prices[0]
+        self.pSOL = price_path[0]
         state = self.initialize_simulation(self.amount_SOL_initial, self.pSOL)
         stability_pool_hyUSD_SOL_non_zero_count = 0
         stability_pool_hyUSD_SOL_usage = 0
@@ -216,11 +223,20 @@ class Simulation:
         stability_pool_hyUSD_xSOL_non_usage = 0
         xSOL_negative_price_count = 0
 
-        for day, pSOL_current in enumerate(simulated_prices):
+        for day, pSOL_current in enumerate(price_path):
             state, _ = self.handle_action(state, Action.UpdateMarketPrices, 0, pSOL_current)
             collateral_ratio = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
-            probabilities = get_action_probabilities(collateral_ratio, stab_mode_fee_control, self.config)
-            amount_to_mint_per = get_mint_amount(collateral_ratio, self.config)
+            amount_to_mint_per = get_mint_amount(
+                collateral_ratio, 
+                stab_mode_fee_control, 
+                self.config
+            )
+
+            probabilities = get_action_probabilities(
+                collateral_ratio, 
+                stab_mode_fee_control, 
+                self.config
+            )
 
             actions = [
                 (Action.MintFSOL if np.random.rand() < probabilities['hyUSD_mint'] else Action.BurnFSOL, amount_to_mint_per['hyUSD_mint_amount']),
@@ -276,11 +292,11 @@ class Simulation:
             "stab_SOL_nSOL_moved": result.pre_StabilityPoolSOL_values.nSOL - result.post_StabilityPoolSOL_values.nSOL,
             "stab_SOL_nF_burned": stability_pool_hyUSD_SOL_usage_nF_redeemed,
             "stab_SOL_nX_minted": result.post_StabilityPoolSOL_values.nX - result.pre_StabilityPoolSOL_values.nX,
-            "pre_stabSOL_nF": result.pre_UpdatehyUSDInStabilityPool_values.stab_nF,
-            "post_stabSOL_nF": result.post_UpdatehyUSDInStabilityPool_values.stab_nF,
+            "pre_stabSOL_nF": result.pre_UpdatehyUSDInStabilityPool_values.stab_nF_SOL,
+            "post_stabSOL_nF": result.post_UpdatehyUSDInStabilityPool_values.stab_nF_SOL,
             "stabSOL_nF": state.stabSOL_nF,
-            "pre_stabxSOL_nF": result.pre_UpdatehyUSDInStabilityPool_values.stab_nF,
-            "post_stabxSOL_nF": result.post_UpdatehyUSDInStabilityPool_values.stab_nF,
+            "pre_stabxSOL_nF": result.pre_UpdatehyUSDInStabilityPool_values.stab_nF_xSOL,
+            "post_stabxSOL_nF": result.post_UpdatehyUSDInStabilityPool_values.stab_nF_xSOL,
             "stabxSOL_nF": state.stabxSOL_nF,
         }
 
