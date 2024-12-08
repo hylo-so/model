@@ -24,7 +24,7 @@ The model has several important limitations to consider:
 ### Stability Mechanisms
 The model does not incorporate several key stability mechanisms of the protocol:
 
-1. **Premium Redemptions**
+1. **Redemptions Bonuses**
    - In stability mode, the protocol can offer bonus on hyUSD redemptions
    - These bonuses create arbitrage opportunities where traders can profit by:
      - Buying hyUSD at market price (e.g. $1)
