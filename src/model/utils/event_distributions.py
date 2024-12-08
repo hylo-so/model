@@ -1,29 +1,26 @@
 import numpy as np
 import configparser
 
-def get_action_probabilities(collateral_ratio: float, stab_mode_fees_control: float) -> dict:
+def get_action_probabilities(collateral_ratio: float, stab_mode_fees_control: float, config: configparser.ConfigParser) -> dict:
     """
     Define the probability distribution for actions based on collateral ratio.
 
     Args:
         collateral_ratio (float): The current collateral ratio.
         stab_mode_fees_control (float): The fees control stability mode collateral ratio activation threshold
+        config (configparser.ConfigParser): Configuration parser with action probabilities
 
     Returns:
         dict: A dictionary with probabilities for minting hyUSD and xSOL based on the current collateral ratio.
     """
-    if collateral_ratio > 5:
-        return {'hyUSD_mint': 1, 'xSOL_mint': 0.10}
-    elif 3 < collateral_ratio <= 5:
-        return {'hyUSD_mint': 0.90, 'xSOL_mint': 0.25}
-    elif 2.2 < collateral_ratio <= 3:
-        return {'hyUSD_mint': 0.8, 'xSOL_mint': 0.40}
-    elif stab_mode_fees_control < collateral_ratio <= 2.2:
-        return {'hyUSD_mint': 0.60, 'xSOL_mint': 0.6}
-    elif 1 < collateral_ratio <= stab_mode_fees_control:
-        return {'hyUSD_mint': 0.00, 'xSOL_mint': 0.80}
-    else:
-        return {'hyUSD_mint': 0.00, 'xSOL_mint': 1.00}
+    # Determine the section prefix based on the collateral ratio
+    section_prefix = determine_section_prefix(collateral_ratio)
+    
+    # Fetch probabilities from config
+    return {
+        'hyUSD_mint': config.getfloat('action_probabilities', f'{section_prefix}_hyUSD_mint'),
+        'xSOL_mint': config.getfloat('action_probabilities', f'{section_prefix}_xSOL_mint')
+    }
 
 def get_mint_amount(collateral_ratio: float, config: configparser.ConfigParser) -> dict:
     """

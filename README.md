@@ -30,7 +30,7 @@ git clone <https://github.com/hylo-so/model.git>
 
 2. **Create the Conda environment**  
 Create a Conda environment using the `environment.yml` file provided in the project:
-`conda create -f environment.yml`
+`conda env create -f environment.yml`
 
 
 3. **Activate the environment**  
@@ -39,8 +39,11 @@ Activate the Conda environment:
 
 
 ### Running the Model
-To execute the model, run:
-`python3 main.py`
+first go to src folder, run
+`cd src`
+
+then to execute the model, run:
+`python3 src/main.py`
 
 This will launch the model with the default parameters. To customize these parameters, edit `config.ini` and update the following variables as needed:
 

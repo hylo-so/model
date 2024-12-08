@@ -218,7 +218,7 @@ class Simulation:
         for day, pSOL_current in enumerate(simulated_prices):
             state, _ = self.handle_action(state, Action.UpdateMarketPrices, 0, pSOL_current)
             collateral_ratio = calculate_collateral_ratio(state.nSOL, pSOL_current, state.nF, state.pF)
-            probabilities = get_action_probabilities(collateral_ratio, stab_mode_fee_control)
+            probabilities = get_action_probabilities(collateral_ratio, stab_mode_fee_control, self.config)
             amount_to_mint_per = get_mint_amount(collateral_ratio, self.config)
 
             actions = [
