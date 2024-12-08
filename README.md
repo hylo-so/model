@@ -77,9 +77,6 @@ This will launch the model with the default parameters. To customize these param
 - `[action_probabilities]` defines the probability of a mint or burn action occurring, depending on the Collateral Ratio. For example, `CR3-5_hyUSD_mint` specifies the probability of hyUSD being minted when the Collateral Ratio is between 3 and 5.
 - `[mint_amount]` defines the normal distribution parameters for the amount of tokens minted or burned. For instance, `CR3-5_hyUSD_mint_mean` and `CR3-5_hyUSD_mint_std` specify the mean and standard deviation, respectively, of the normal distribution for the amount of hyUSD minted when the Collateral Ratio is between 3 and 5.
 
-
-Upon completion, two heat maps will be displayed showing the percentage of time that a run has faced a de-collateralization event, and the percentage of time the stability pool has been utilized for different combinations of stability mod.
-
 ### Running the Analysis
 
 After running the model, you can analyze the results using the provided analysis tools:
