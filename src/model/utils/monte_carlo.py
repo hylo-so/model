@@ -74,7 +74,3 @@ def generate_monte_carlo_price_paths(
     
     return price_paths
 
-def calculate_half_life(decay_factor: float) -> float:
-    """Calculate the half-life in days for a given decay factor."""
-    return -np.log(2) / np.log(decay_factor)
-
