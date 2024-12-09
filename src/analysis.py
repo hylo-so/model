@@ -8,14 +8,14 @@ import sys
 def analyze_depeg_events():
     # Read config file
     config = configparser.ConfigParser()
-    config.read('../src/config.ini')
+    config.read('config.ini')
     
     # Get expected number of time steps from config
     expected_T = config.getint('settings', 'T')
     hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
     
     # Get all CSV files in output directory
-    files = glob.glob('../src/output/run_*.csv')
+    files = glob.glob('output/run_*.csv')
     
     # Debug output
     print("\nDebug Information:")
@@ -115,14 +115,14 @@ def analyze_depeg_events():
 def analyze_stability_pool_usage():
     # Read config file
     config = configparser.ConfigParser()
-    config.read('../src/config.ini')
+    config.read('config.ini')
     
     # Get expected number of time steps from config
     expected_T = config.getint('settings', 'T')
     hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
     
     # Get all CSV files in output directory
-    files = glob.glob('../src/output/run_*.csv')
+    files = glob.glob('output/run_*.csv')
     
     if not files:
         print("No CSV files found in the output directory")

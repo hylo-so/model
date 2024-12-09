@@ -1,6 +1,6 @@
 name: model
 channels:
-  - conda-forge
+  - defaults
 dependencies:
   - blas=1.0=openblas
   - bottleneck=1.3.7=py38hbda83bc_0
