@@ -15,7 +15,7 @@ def analyze_depeg_events():
     hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
     
     # Get all CSV files in output directory
-    files = glob.glob('output/run_*.csv')
+    files = glob.glob('./src/output/simulations/run_*.csv')
     
     # Debug output
     print("\nDebug Information:")
@@ -122,7 +122,7 @@ def analyze_stability_pool_usage():
     hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
     
     # Get all CSV files in output directory
-    files = glob.glob('output/run_*.csv')
+    files = glob.glob('./src/output/simulations/run_*.csv')
     
     if not files:
         print("No CSV files found in the output directory")
@@ -244,7 +244,7 @@ def combine_and_save_analysis():
     }).round(3)
     
     # Save both detailed and summary results
-    output_dir = './output'
+    output_dir = './src/output/analysis'
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
     # Save detailed results

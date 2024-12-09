@@ -4,10 +4,8 @@ import pandas as pd
 import numpy as np
 
 def clear_output_directory(directory_path: str):
-    # Create directory if it doesn't exist
     os.makedirs(directory_path, exist_ok=True)
     
-    # Rest of the function remains the same
     for filename in os.listdir(directory_path):
         file_path = os.path.join(directory_path, filename)
         try:
