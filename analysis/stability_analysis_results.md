@@ -85,7 +85,7 @@ From config.ini:
 The data demonstrates that complete system stability is achieved at 140% CR, with a strong safety threshold at 130% CR. The optimal configuration balances between these levels, with fee parameters set 10%-20% higher than the stability pool activation threshold. This provides robust depeg protection while maintaining reasonable pool usage frequency.
 
 ## Heatmaps
-![Parameter Analysis Heatmaps](./parameter_analysis_heatmaps.png)
+![Parameter Analysis Heatmaps](./output/parameter_analysis_heatmaps.png)
 
 The heatmaps above show:
 - Left: Depeg Event Rate (darker = higher risk)
