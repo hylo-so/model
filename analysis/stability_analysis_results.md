@@ -32,7 +32,7 @@ From config.ini:
 
 ### Parameter Testing Range
 - Lower Bound: 110% CR (1.1)
-- Upper Bound: 160% CR (1.6)
+- Upper Bound: 158% CR (1.58)
 - Step Size: 2% CR (0.02)
 
 ## Key Findings
