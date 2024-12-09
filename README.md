@@ -1,5 +1,3 @@
-# Hylo Modelisation
-
 ## Overview
 This project aims to model the behavior of the Hylo protocol. By analyzing past data and simulated future returns using a Monte Carlo model, it seeks to understand how the protocol reacts under various market conditions, specifically focusing on the collateral ratio's impact on asset minting and burning.
 
