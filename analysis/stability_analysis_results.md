@@ -88,5 +88,5 @@ The data demonstrates that complete system stability is achieved at 140% CR, wit
 ![Parameter Analysis Heatmaps](./output/parameter_analysis_heatmaps.png)
 
 The heatmaps above show:
-- Left: Depeg Event Rate (darker = higher risk)
-- Right: Average Stability Pool Activations (darker = more frequent)
+- Left: Depeg Event Rate (percentage of runs that experienced a depeg)
+- Right: Average Stability Pool Activations (absolute value for each run)
