@@ -55,37 +55,30 @@ Activate the Conda environment:
 
 
 ### Running the Model
-first go to src folder, run
-`cd src`
-
-then to execute the model, run:
+Execute the model with the local `config.ini` configuration:
 `python3 src/main.py`
 
-This will launch the model with the default parameters. To customize these parameters, edit `config.ini` and update the following variables as needed:
+### `config.ini` Reference
 
-- `beta`: The beta parameter of the Monte Carlo simulation.
-- `T`: The number of days for the Monte Carlo simulation.
-- `N`: The number of different price paths generated.
-- `sModeLower`: The lower stability mode collateral ratio threshold to test.
-- `sModeUpper`: The highest stability mode collateral ratio threshold to test.
+- `beta`: Amount of volatility absorbed by xSOL (between 0.0 and 1.0). Hylo's production protocol uses `beta=1.0`.
+- `T`: Number of days (iterations) to run the simulation.
+- `N`: Number of SOL price paths to generate.
+- `sModeLower`: Lower stability mode collateral ratio threshold to test.
+- `sModeUpper`: Higher stability mode collateral ratio threshold to test.
 - `sModeStep`: The step size between tests of different stability modes.
 - `amount_SOL_initial`: The initial amount of SOL in the collateral pool.
 - `hyUSD_staked_per`: The percentage of hyUSD staked in the stability pool.
 - `num_runs_per_path`: The number of runs of the model on each path.
-- `[action_probabilities]` defines the probability of a mint or burn action occurring, depending on the Collateral Ratio. For example, `CR3-5_hyUSD_mint` specifies the probability of hyUSD being minted when the Collateral Ratio is between 3 and 5.
-- `[mint_amount]` defines the normal distribution parameters for the amount of tokens minted or burned. For instance, `CR3-5_hyUSD_mint_mean` and `CR3-5_hyUSD_mint_std` specify the mean and standard deviation, respectively, of the normal distribution for the amount of hyUSD minted when the Collateral Ratio is between 3 and 5.
+- `[action_probabilities]` Probability of a mint or burn action occurring, depending on the Collateral Ratio. For example, `CR3-5_hyUSD_mint` specifies the probability of hyUSD being minted when the Collateral Ratio is between 3 and 5.
+- `[mint_amount]` Normal distribution for the amount of tokens to mint or burn. For instance, `CR3-5_hyUSD_mint_mean` and `CR3-5_hyUSD_mint_std` specify the mean and standard deviation, respectively, of the normal distribution for the amount of hyUSD minted when the Collateral Ratio is between 3 and 5.
 
 ### Running the Analysis
 
 After running the model, you can analyze the results using the provided analysis tools:
 
-1. **Navigate to the analysis folder**:
-`cd analysis`
+`python3 analysis/analysis.py`
 
-2. **Run the analysis script**:
-`python3 analysis.py`
-
-This will generate two CSV files in the `output` directory:
+The analysis script will generate two CSV files in the `output` directory:
 - `detailed_results.csv`: Contains detailed data for each simulation run
 - `summary_results.csv`: Contains aggregated statistics grouped by parameters
 
@@ -96,7 +89,7 @@ This will generate `parameter_analysis_heatmaps.png` in the `output` directory, 
 - Depeg Event Rate heatmap: Displays the probability of depeg events for different parameter combinations
 - Stability Pool Usage heatmap: Shows the average number of stability pool activations
 
-### Understanding the Analysis Results
+### Interpreting Results
 
 The analysis provides several key metrics:
 
@@ -107,7 +100,3 @@ The analysis provides several key metrics:
 2. **Stability Pool Usage**:
    - Number of times the stability pool was activated
    - Average activations across different parameter combinations
-
-
-
-
