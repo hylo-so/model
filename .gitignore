@@ -3,4 +3,4 @@ market_caps_collaterization_ratio_nSOL_evolution.png
 __pycache__
 .direnv/
 .git
-src/output
+output

@@ -7,7 +7,10 @@
   with import nixpkgs { system = "aarch64-darwin"; };
   {
     devShells.aarch64-darwin.default = mkShell {
-      packages = [ micromamba pyright ];
+      packages = [ micromamba pyright liblapack ];
+      shellHook = ''
+        eval "$(micromamba shell hook --shell zsh)"
+      '';
     };
   };
 }

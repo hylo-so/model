@@ -5,21 +5,9 @@ from pathlib import Path
 import configparser
 import sys
 
-def analyze_depeg_events():
-    # Read config file
-    config = configparser.ConfigParser()
-    config.read('../src/config.ini')
-    
-    # Get expected number of time steps from config
-    expected_T = config.getint('settings', 'T')
-    hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
-    
-    # Get all CSV files in output directory
-    files = glob.glob('../src/output/run_*.csv')
-    
-    # Debug output
-    print("\nDebug Information:")
-    print(f"Expected timesteps (T) from config: {expected_T}")
+def analyze_depeg_events(files: list, expected_T: int, hyUSD_SOL_staked: float) -> tuple:
+    """Analyze depeg events from simulation files"""
+    print("\nAnalyzing Depeg Events...")
     print(f"Number of files found: {len(files)}")
     
     # Check each file's length
@@ -39,10 +27,9 @@ def analyze_depeg_events():
         return None, None
     
     # Pattern depends on whether SOL staking is enabled
-    if hyUSD_SOL_staked == 0:
-        pattern = r'run_(\d+\.\d+)-PATH_(\d+)-SOL_\d+\.\d+-FEE_(\d+\.\d+)-xSOL_(\d+\.\d+)\.csv'
-    else:
-        pattern = r'run_(\d+\.\d+)-PATH_(\d+)-SOL_(\d+\.\d+)-FEE_(\d+\.\d+)-xSOL_(\d+\.\d+)\.csv'
+    pattern = (r'run_(\d+\.\d+)-PATH_(\d+)-SOL_(\d+\.\d+)-FEE_(\d+\.\d+)-xSOL_(\d+\.\d+)\.csv' 
+              if hyUSD_SOL_staked > 0 else 
+              r'run_(\d+\.\d+)-PATH_(\d+)-SOL_\d+\.\d+-FEE_(\d+\.\d+)-xSOL_(\d+\.\d+)\.csv')
     
     results = []
     invalid_files = []
@@ -112,22 +99,15 @@ def analyze_depeg_events():
     
     return results_df, param_analysis
 
-def analyze_stability_pool_usage():
-    # Read config file
-    config = configparser.ConfigParser()
-    config.read('../src/config.ini')
-    
-    # Get expected number of time steps from config
-    expected_T = config.getint('settings', 'T')
-    hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
-    
-    # Get all CSV files in output directory
-    files = glob.glob('../src/output/run_*.csv')
+def analyze_stability_pool_usage(files: list, expected_T: int, hyUSD_SOL_staked: float) -> tuple:
+    """Analyze stability pool usage from simulation files"""
+    print("\nAnalyzing Stability Pool Usage...")
+    print(f"Number of files found: {len(files)}")
     
     if not files:
         print("No CSV files found in the output directory")
         return None, None
-    
+        
     # Pattern depends on whether SOL staking is enabled
     if hyUSD_SOL_staked == 0:
         pattern = r'run_(\d+\.\d+)-PATH_(\d+)-SOL_\d+\.\d+-FEE_(\d+\.\d+)-xSOL_(\d+\.\d+)\.csv'
@@ -136,10 +116,6 @@ def analyze_stability_pool_usage():
     
     results = []
     invalid_files = []
-    
-    print("\nAnalyzing Stability Pool Usage...")
-    print(f"Number of files found: {len(files)}")
-    
     for file in files:
         try:
             df = pd.read_csv(file)
@@ -210,10 +186,22 @@ def analyze_stability_pool_usage():
     
     return results_df, param_analysis
 
-def combine_and_save_analysis():
-    # Run both analyses
-    depeg_results, depeg_analysis = analyze_depeg_events()
-    stability_results, stability_analysis = analyze_stability_pool_usage()
+def combine_and_save_analysis(output_dir: str) -> tuple:
+    """Run analyses and save results"""
+    # Read config file
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    
+    # Get configuration parameters
+    expected_T = config.getint('settings', 'T')
+    hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
+    
+    # Get all CSV files in output directory
+    files = glob.glob('./output/simulations/run_*.csv')
+    
+    # Run both analyses with shared parameters
+    depeg_results, depeg_analysis = analyze_depeg_events(files, expected_T, hyUSD_SOL_staked)
+    stability_results, stability_analysis = analyze_stability_pool_usage(files, expected_T, hyUSD_SOL_staked)
     
     if depeg_results is None or stability_results is None:
         print("Error: One or both analyses failed to produce results")
@@ -244,7 +232,6 @@ def combine_and_save_analysis():
     }).round(3)
     
     # Save both detailed and summary results
-    output_dir = './output'
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
     # Save detailed results
@@ -266,4 +253,8 @@ def combine_and_save_analysis():
     return combined_results, summary
 
 if __name__ == "__main__":
-    combined_results, summary = combine_and_save_analysis()
+    # Define output directory
+    output_dir = './output/analysis'
+    
+    # Run analysis
+    combined_results, summary = combine_and_save_analysis(output_dir)

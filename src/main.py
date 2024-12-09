@@ -92,7 +92,7 @@ if hyUSD_SOL_staked > 0:
 else:
     stab_mode_hyUSD_SOL_range = np.array([1.0])  # Dummy value when disabled
 
-output_directory = './output/'
+output_directory = './output/simulations'
 decimal_places = count_decimal_places(s_mode_step)
 clear_output_directory(output_directory)
 
