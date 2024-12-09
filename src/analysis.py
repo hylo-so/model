@@ -197,7 +197,7 @@ def combine_and_save_analysis(output_dir: str) -> tuple:
     hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
     
     # Get all CSV files in output directory
-    files = glob.glob('./src/output/simulations/run_*.csv')
+    files = glob.glob('./output/simulations/run_*.csv')
     
     # Run both analyses with shared parameters
     depeg_results, depeg_analysis = analyze_depeg_events(files, expected_T, hyUSD_SOL_staked)
@@ -254,7 +254,7 @@ def combine_and_save_analysis(output_dir: str) -> tuple:
 
 if __name__ == "__main__":
     # Define output directory
-    output_dir = './src/output/analysis'
+    output_dir = './output/analysis'
     
     # Run analysis
     combined_results, summary = combine_and_save_analysis(output_dir)

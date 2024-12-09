@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def create_heatmaps_from_summary():
     # Read the summary results
-    summary_df = pd.read_csv('./src/output/analysis/summary_results.csv', skiprows=[0, 1])
+    summary_df = pd.read_csv('./output/analysis/summary_results.csv', skiprows=[0, 1])
     
     # Rename columns to their proper names
     summary_df.columns = ['xsol_param', 'fee_param', 
@@ -60,7 +60,7 @@ def create_heatmaps_from_summary():
     
     # Adjust layout and save
     plt.tight_layout()
-    plt.savefig('./src/output/analysis/parameter_analysis_heatmaps.png', dpi=300, bbox_inches='tight')
+    plt.savefig('./output/analysis/parameter_analysis_heatmaps.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 if __name__ == "__main__":
