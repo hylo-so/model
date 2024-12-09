@@ -1,7 +1,7 @@
 ## Overview
 This project aims to model the behavior of the Hylo protocol. By analyzing past data and simulated future returns using a Monte Carlo model, it seeks to understand how the protocol reacts under various market conditions, specifically focusing on the collateral ratio's impact on asset minting and burning.
 
-## Assumptions in Pre-setup Modelisation
+## Assumptions
 The model relies on the following key assumptions regarding the probability of net burn or mint of hyUSD and xSOL after each trading day:
 
 - **Collateral Ratio Impact:**
