@@ -19,6 +19,22 @@ The analysis examines protocol behavior across different combinations of:
 - Higher values mean earlier activation (more conservative)
 - Example: 1.3 means fees are adjusted when CR falls below 130%
 
+### Simulation Parameters
+From config.ini:
+- Beta (Price Volatility): 1.0 (matches historical volatility)
+- Time Steps: 1000 steps per simulation
+- Parallel Simulations: 20
+- Runs Per Parameter: 4
+
+### Stability Pool Configuration
+- hyUSD-xSOL Pool: Maximum of 70% of hyUSD staked
+- Recovery Rate Range: 0.5% to 5% daily
+
+### Parameter Testing Range
+- Lower Bound: 110% CR (1.1)
+- Upper Bound: 160% CR (1.6)
+- Step Size: 2% CR (0.02)
+
 ## Key Findings
 
 ### Depeg Events
