@@ -38,6 +38,7 @@ The model does not incorporate several key stability mechanisms of the protocol:
 
 ### Prerequisites
 - Ensure you have [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) installed on your system.
+- Install `lapack` through `brew` or another package manager, as the model requires linear algebra libs.
 
 ### Installation
 
