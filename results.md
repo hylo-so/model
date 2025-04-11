@@ -67,7 +67,7 @@ The heatmaps above illustrate:
 
 ## Optimal Configuration Recommendations
 
-Based on that analysis, we recommend the following configurations:
+Based on that analysis, this are the recommended configurations:
 
 ### 1. Minimum parameter threshold for complete system stability
 - **Stability Mode 2 -- Stability Pool**: 1.3
