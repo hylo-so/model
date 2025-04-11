@@ -82,7 +82,7 @@ num_runs_per_path = config.getint('settings', 'num_runs_per_path')
 hyUSD_SOL_staked = config.getfloat('settings', 'hyUSD_staked_per')
 
 # Parameters
-file_path = './Solana Historical Data.csv'
+file_path = './SOL-Price-Historical-April-11-24.csv'
 stab_mode_fee_control_range = np.arange(s_mode_lower, s_mode_upper, s_mode_step)
 stab_mode_hyUSD_xSOL_range = np.arange(s_mode_lower, s_mode_upper, s_mode_step)
 
@@ -97,9 +97,9 @@ decimal_places = count_decimal_places(s_mode_step)
 clear_output_directory(output_directory)
 
 # Use historical price data
-#input_price_csv = './Solana Historical Data.csv'
-#simulate(file_path, beta, T, N, stab_mode_hyUSD_SOL_range, stab_mode_fee_control_range, 
-#        num_runs_per_path, stab_mode_hyUSD_xSOL_range, input_price_csv=input_price_csv)
+input_price_csv = './SOL-Price-Historical-April-11-24.csv'
+simulate(file_path, beta, T, N, stab_mode_hyUSD_SOL_range, stab_mode_fee_control_range, 
+        num_runs_per_path, stab_mode_hyUSD_xSOL_range, input_price_csv=input_price_csv)
 
 # Normal usage without input_price_csv
-simulate(file_path, beta, T, N, stab_mode_hyUSD_SOL_range, stab_mode_fee_control_range, num_runs_per_path, stab_mode_hyUSD_xSOL_range)
+#simulate(file_path, beta, T, N, stab_mode_hyUSD_SOL_range, stab_mode_fee_control_range, num_runs_per_path, stab_mode_hyUSD_xSOL_range)

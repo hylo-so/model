@@ -23,7 +23,16 @@ def count_decimal_places(value):
     return 0
 
 def clean_price_csv(input_price_csv: str, T: int) -> np.ndarray:
+    # Read the CSV
     price_df = pd.read_csv(input_price_csv, usecols=['Price'])
+    
+    # Clean and convert price data
     price_df['Price'] = price_df['Price'].replace(',', '', regex=True).astype(float)
+    
+    # Reverse the order to get chronological order (oldest first)
+    price_df = price_df.iloc[::-1]
+    
+    # Take only T days of data
     price_paths = price_df['Price'].values[:T].reshape(-1, 1)
+    
     return price_paths
