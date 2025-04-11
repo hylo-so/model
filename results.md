@@ -47,9 +47,19 @@ The average number of stability pool activations per simulation:
   - Stability pool activations generally increase as the Stability Mode 2 threshold activation parameter increases
   - Higher fee parameters don't consistently reduce activations, suggesting the Stability Mode 2 threshold activation parameter is more influential
 
+### Activation Frequency as Percentage
+
+With the simulation running over 1000 days of price data, we can express the stability pool activation frequency as a percentage of total days:
+
+- **Low CR Settings (1.1-1.2)**: 0.3-1.7% of days require stability pool activation
+- **Mid-Range CR (1.25-1.35)**: 2.2-4.2% of days require stability pool activation
+- **High CR Settings (1.4-1.55)**: 3.5-4.8% of days require stability pool activation
+
+This means that even in the most active configuration, the stability pool is only triggered on less than 5% of days, indicating relatively low operational overhead.
+
 ## Parameter Analysis Heatmaps
 
-![Parameter Analysis Heatmaps](parameter_analysis_heatmaps.png)
+![Parameter Analysis Heatmaps](output/analysis/parameter_analysis_heatmaps.png)
 
 The heatmaps above illustrate:
 - **Left**: Depeg Event Rate - Shows the probability of depeg events for different parameter combinations
@@ -62,13 +72,13 @@ Based on that analysis, we recommend the following configurations:
 ### 1. Minimum parameter threshold for complete system stability
 - **Stability Mode 2 -- Stability Pool**: 1.3
 - **Stability Mode 1 -- Fee Adjustment**: 1.3
-- **Results**: 0% depeg risk with ~42 activations per run
+- **Results**: 0% depeg risk with ~42 activations per run (4.2% of days)
 - **Rationale**: This configuration guarantees complete system stability with the minimum threshold
 
 ### 2. Limited Stability Pool Activations & complete system stability
 - **Stability Mode 2 -- Stability Pool**: 1.3
 - **Stability Mode 1 -- Fee Adjustment**: 1.45-1.5
-- **Results**: 0% depeg risk with ~32-35 activations per run
+- **Results**: 0% depeg risk with ~32-35 activations per run (3.2-3.5% of days)
 - **Rationale**: Maintains complete stability while reducing activation frequency by ~25%
 
 ## Model Limitations
