@@ -33,15 +33,14 @@ The average number of stability pool activations per simulation:
 
 - **Low CR Settings (1.1-1.2)**:
   - Relatively few activations (3.1-16.7)
-  - This is likely because the system quickly depegs before many activations can occur
+  - This is because the system quickly depegs before many activations can occur
 
-- **Mid-Range CR (1.25-1.35)**:
+- **Transition point (1.25-1.35)**:
   - Moderate activation frequency (21.9-41.9)
-  - Represents a balance between stability and efficiency
 
 - **High CR Settings (1.4-1.55)**:
   - Highest activation frequency (34.8-47.8)
-  - More frequent interventions lead to better stability but higher operational overhead
+  - More frequent activation due to earlier intervention lead to better stability as the stability pool can be activated before a depeg event happen.
 
 - **Activation Pattern**:
   - Stability pool activations generally increase as the Stability Mode 2 threshold activation parameter increases
@@ -55,7 +54,7 @@ With the simulation running over 1411 days of price data, we can express the sta
 - **Mid-Range CR (1.25-1.35)**: 1.6-3.0% of days require stability pool activation
 - **High CR Settings (1.4-1.55)**: 2.5-3.4% of days require stability pool activation
 
-This means that even in the most active configuration, the stability pool is only triggered on less than 3.5% of days, indicating relatively low operational overhead.
+This means that even in the most active configuration, the stability pool is only triggered on less than 3.5% of days.
 
 ## Parameter Analysis Heatmaps
 
@@ -63,7 +62,7 @@ This means that even in the most active configuration, the stability pool is onl
 
 The heatmaps above illustrate:
 - **Left**: Depeg Event Rate - Shows the probability of depeg events for different parameter combinations
-- **Right**: Average Stability Pool Activations - Shows the frequency of stability pool interventions
+- **Right**: Average Stability Pool Activations - Shows the frequency of stability pool interventions on each run over 1411 days
 
 ## Optimal Configuration Recommendations
 
@@ -73,7 +72,7 @@ Based on that analysis, this are the recommended configurations:
 - **Stability Mode 2 -- Stability Pool**: 1.3
 - **Stability Mode 1 -- Fee Adjustment**: 1.3
 - **Results**: 0% depeg risk with ~42 activations per run (3.0% of days)
-- **Rationale**: This configuration guarantees complete system stability with the minimum threshold
+- **Rationale**: This is the minimum configuration to guarantees complete system stability
 
 ### 2. Limited Stability Pool Activations & complete system stability
 - **Stability Mode 2 -- Stability Pool**: 1.3
@@ -86,9 +85,8 @@ Based on that analysis, this are the recommended configurations:
 It's important to note some limitations of this analysis:
 
 - **Time Granularity**: The model operates on daily price data, which may overstate depeg risks. In a production environment, the protocol is monitored on a second-by-second basis, allowing for much faster responses to price movements.
-- **Discrete Interventions**: The simulation applies stability mechanisms at fixed daily intervals, whereas the actual protocol can respond continuously to market conditions.
 
-These limitations suggest that the actual protocol may perform better than indicated by the model, particularly in preventing depegs during sudden price movements.
+This limitation suggest that the actual protocol may perform better than indicated by the model, particularly in preventing depegs during sudden price movements.
 
 ## Conclusion
 
