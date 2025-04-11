@@ -59,7 +59,7 @@ This means that even in the most active configuration, the stability pool is onl
 
 ## Parameter Analysis Heatmaps
 
-![Parameter Analysis Heatmaps](output/analysis/parameter_analysis_heatmaps.png)
+![Parameter Analysis Heatmaps](/parameter_analysis_heatmaps.png)
 
 The heatmaps above illustrate:
 - **Left**: Depeg Event Rate - Shows the probability of depeg events for different parameter combinations
